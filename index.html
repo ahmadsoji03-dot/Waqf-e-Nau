@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waqf-e-Nau Ghana | Jalsa Salana Interactive Quiz</title>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --primary-blue: #0047AB;
+      --dark-blue: #002D72;
+      --light-blue: #EBF3FF;
+      --accent-blue: #1E88E5;
+      --white: #FFFFFF;
+      --off-white: #F7FAFC;
+      --text-dark: #1A202C;
+      --text-muted: #4A5568;
+      --border-color: #CBD5E0;
+      --success: #16A34A;
+      --danger: #DC2626;
+      --gold: #D97706;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--dark-blue) 0%, var(--primary-blue) 100%);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      color: var(--white);
+      padding: 20px 12px 24px;
+    }
+
+    .logo-wrapper {
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 12px;
+      background: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      border: 3px solid var(--light-blue);
+    }
+
+    .logo-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 6px;
+    }
+
+    .logo-placeholder {
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--primary-blue);
+      text-align: center;
+      line-height: 1.2;
+      padding: 6px;
+    }
+
+    .header h1 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      font-size: 0.95rem;
+      color: var(--light-blue);
+      opacity: 0.95;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(6px);
+    }
+
+    .nav-tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: var(--white);
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-tab.active {
+      background: var(--white);
+      color: var(--primary-blue);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Form Elements */
+    .form-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--dark-blue);
+      margin-bottom: 6px;
+    }
+
+    .form-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.45;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px var(--light-blue);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.99);
+    }
+
+    .btn-primary {
+      background: var(--primary-blue);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background: var(--dark-blue);
+    }
+
+    .btn-secondary {
+      background: var(--light-blue);
+      color: var(--primary-blue);
+      margin-top: 10px;
+    }
+
+    .btn-secondary:hover {
+      background: #DCE8FF;
+    }
+
+    .btn-danger-outline {
+      background: transparent;
+      border: 1.5px solid #FCA5A5;
+      color: var(--danger);
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      width: auto;
+      border-radius: 8px;
+    }
+
+    .btn-danger-outline:hover {
+      background: #FEF2F2;
+    }
+
+    /* Quiz Top Bar */
+    .quiz-status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--light-blue);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+    }
+
+    .progress-badge {
+      font-weight: 700;
+      color: var(--dark-blue);
+      font-size: 0.95rem;
+    }
+
+    .timer-badge {
+      font-family: monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary-blue);
+      background: var(--white);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid #BFDBFE;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: #E2E8F0;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary-blue);
+      width: 5%;
+      transition: width 0.3s ease;
+    }
+
+    .question-text {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.45;
+      margin-bottom: 18px;
+    }
+
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .option-btn {
+      text-align: left;
+      padding: 14px 16px;
+      background: var(--off-white);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 0.98rem;
+      font-weight: 500;
+      color: var(--text-dark);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .option-btn:hover {
+      border-color: var(--accent-blue);
+      background: var(--light-blue);
+    }
+
+    .option-btn.selected {
+      border-color: var(--primary-blue);
+      background: var(--light-blue);
+      color: var(--dark-blue);
+      font-weight: 700;
+    }
+
+    .option-letter {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 1.5px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .option-btn.selected .option-letter {
+      background: var(--primary-blue);
+      color: var(--white);
+      border-color: var(--primary-blue);
+    }
+
+    .quiz-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px solid #EDF2F7;
+      padding-top: 16px;
+    }
+
+    /* Results Screen */
+    .result-banner {
+      text-align: center;
+      padding: 12px 0 20px;
+    }
+
+    .result-score-circle {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: var(--light-blue);
+      border: 5px solid var(--primary-blue);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+    }
+
+    .result-score-circle .pct {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--dark-blue);
+      line-height: 1;
+    }
+
+    .result-score-circle .lbl {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--primary-blue);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .stat-box {
+      background: var(--off-white);
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid #E2E8F0;
+    }
+
+    .stat-box .val {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--dark-blue);
+    }
+
+    .stat-box .key {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Leaderboard Table */
+    .lb-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .lb-refresh-btn {
+      background: var(--light-blue);
+      color: var(--primary-blue);
+      border: none;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .lb-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .lb-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--off-white);
+      border-radius: 12px;
+      border: 1px solid #E2E8F0;
+      gap: 10px;
+    }
+
+    .lb-item.top-1 {
+      background: #FFFBEB;
+      border-color: #FCD34D;
+    }
+
+    .lb-item.top-2 {
+      background: #F8FAFC;
+      border-color: #CBD5E1;
+    }
+
+    .lb-item.top-3 {
+      background: #FFF7ED;
+      border-color: #FDBA74;
+    }
+
+    .lb-rank {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--primary-blue);
+      color: var(--white);
+      font-weight: 800;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .top-1 .lb-rank { background: #D97706; }
+    .top-2 .lb-rank { background: #64748B; }
+    .top-3 .lb-rank { background: #C2410C; }
+
+    .lb-user {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .lb-name {
+      font-weight: 700;
+      font-size: 0.96rem;
+      color: var(--text-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lb-prof {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lb-metrics {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .lb-acc {
+      font-weight: 800;
+      font-size: 0.98rem;
+      color: var(--primary-blue);
+    }
+
+    .lb-time {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    .mode-banner {
+      font-size: 0.78rem;
+      text-align: center;
+      color: var(--light-blue);
+      margin-top: 8px;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-wrapper">
+        <!-- WAQF-E-NAU LOGO: Replace 'logo.png' with your actual image filename and uncomment the img tag below -->
+        <!-- <img src="logo.png" alt="Waqf-e-Nau Ghana Logo" /> -->
+        <div class="logo-placeholder" id="logoPlaceholder">WAQF-E-NAU<br>GHANA</div>
+      </div>
+      <h1>Waqf-e-Nau Ghana</h1>
+      <p>Jalsa Salana Exhibition — Interactive Knowledge Challenge</p>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="tabQuiz" onclick="switchTab('quiz')">Take Quiz</button>
+      <button class="nav-tab" id="tabLeaderboard" onclick="switchTab('leaderboard')">Top 10 Leaderboard</button>
+    </div>
+
+    <!-- VIEW 1: REGISTRATION -->
+    <section class="card" id="viewRegister">
+      <h2 class="form-title">Welcome to the Waqf-e-Nau Stand!</h2>
+      <p class="form-subtitle">
+        Answer <strong>20 random questions</strong> as accurately and quickly as possible. 
+        Your highest accuracy and fastest time determine your rank on the live Top 10 Leaderboard.
+      </p>
+
+      <form id="registerForm" onsubmit="handleStartQuiz(event)">
+        <div class="form-group">
+          <label for="fullName">Full Name *</label>
+          <input type="text" id="fullName" placeholder="e.g., Ajimati Fawaz Olusoji" required />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address * (Used to save/update your score)</label>
+          <input type="email" id="email" placeholder="e.g., fawaz@example.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="profession">Profession or Field of Study *</label>
+          <input type="text" id="profession" placeholder="e.g., Medical Student, Missionary, Engineer, JAMB Student" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Start 20-Question Quiz</button>
+      </form>
+    </section>
+
+    <!-- VIEW 2: ACTIVE QUIZ -->
+    <section class="card hidden" id="viewQuiz">
+      <div class="quiz-status-bar">
+        <span class="progress-badge" id="questionCounter">Question 1 of 20</span>
+        <span class="timer-badge" id="timerDisplay">00:00</span>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-fill" id="progressBar"></div>
+      </div>
+
+      <div class="question-text" id="questionText">Loading question...</div>
+
+      <div class="options-list" id="optionsContainer"></div>
+
+      <div class="quiz-footer">
+        <button type="button" class="btn btn-danger-outline" onclick="restartWithNewQuestions()">
+          ↻ Restart (20 New Questions)
+        </button>
+        <button type="button" class="btn btn-primary" id="nextBtn" style="width: auto; padding: 12px 24px;" onclick="handleNextQuestion()" disabled>
+          Next Question →
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW 3: RESULTS -->
+    <section class="card hidden" id="viewResults">
+      <div class="result-banner">
+        <div class="result-score-circle">
+          <span class="pct" id="resAccuracy">0%</span>
+          <span class="lbl">Accuracy</span>
+        </div>
+        <h2 class="form-title" id="resPlayerName">JazakAllah!</h2>
+        <p class="form-subtitle" id="resPlayerProf" style="margin-bottom: 0;"></p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="val" id="resScore">0 / 20</div>
+          <div class="key">Correct Answers</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="resTime">00:00</div>
+          <div class="key">Time Taken</div>
+        </div>
+      </div>
+
+      <p id="saveStatusMsg" style="text-align: center; font-size: 0.88rem; color: var(--primary-blue); font-weight: 600; margin-bottom: 16px;">
+        Saving your score to the Jalsa Salana Leaderboard...
+      </p>
+
+      <button class="btn btn-primary" onclick="switchTab('leaderboard')">View Live Top 10 Leaderboard</button>
+      <button class="btn btn-secondary" onclick="retakeQuizFromResults()">Retake Quiz (Overwrite Previous Score)</button>
+    </section>
+
+    <!-- VIEW 4: LEADERBOARD -->
+    <section class="card hidden" id="viewLeaderboard">
+      <div class="lb-header">
+        <div>
+          <h2 class="form-title" style="margin-bottom: 2px;">Top 10 Leaderboard</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Ranked by Highest Accuracy, then Fastest Time</p>
+        </div>
+        <button class="lb-refresh-btn" onclick="loadLeaderboard()">↻ Refresh</button>
+      </div>
+
+      <div class="lb-list" id="leaderboardList">
+        <p style="text-align: center; color: var(--text-muted); padding: 20px;">Loading leaderboard...</p>
+      </div>
+
+      <button class="btn btn-primary" style="margin-top: 18px;" onclick="switchTab('quiz')">Back to Quiz</button>
+    </section>
+
+    <div class="mode-banner" id="connectionModeBanner"></div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. SUPABASE CONFIGURATION
+    // Paste your Supabase Project URL and Anon Public Key below.
+    // =========================================================================
+    const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY";
+
+    let supabaseClient = null;
+    const isSupabaseConfigured =
+      SUPABASE_URL.startsWith("https://") && SUPABASE_ANON_KEY.length > 20;
+
+    if (isSupabaseConfigured && window.supabase) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      document.getElementById("connectionModeBanner").textContent =
+        "Connected to Live Jalsa Salana Cloud Leaderboard";
+    } else {
+      document.getElementById("connectionModeBanner").textContent =
+        "Local Preview Mode (Add Supabase keys in index.html for live multi-device sync)";
+    }
+
+    // =========================================================================
+    // 2. QUESTION BANK (Add up to 100+ questions here!)
+    // Each player automatically gets 20 random questions per attempt.
+    // =========================================================================
+    const QUESTION_BANK = [
+      {
+        q: "Who launched the blessed scheme of Waqf-e-Nau?",
+        options: [
+          "Hazrat Mirza Tahir Ahmad (rh)",
+          "Hazrat Mirza Masroor Ahmad (aba)",
+          "Hazrat Mirza Nasir Ahmad (rh)",
+          "Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)"
+        ],
+        answer: 0
+      },
+      {
+        q: "In which year was the Waqf-e-Nau scheme launched?",
+        options: ["1987", "1989", "1985", "1992"],
+        answer: 0
+      },
+      {
+        q: "What does the Arabic term 'Waqf-e-Nau' literally mean?",
+        options: [
+          "New Dedication",
+          "Sacred Promise",
+          "Servants of Peace",
+          "Youth of Islam"
+        ],
+        answer: 0
+      },
+      {
+        q: "When are children dedicated under the Waqf-e-Nau scheme?",
+        options: [
+          "Before they are born",
+          "At age 7",
+          "At age 15",
+          "Upon graduating university"
+        ],
+        answer: 0
+      },
+      {
+        q: "What is the primary purpose of a Waqif-e-Nau?",
+        options: [
+          "To dedicate their life to the service of Islam, the Jama'at, and humanity",
+          "To become a politician",
+          "To travel around the world",
+          "To run a private business"
+        ],
+        answer: 0
+      },
+      {
+        q: "Who is the current Worldwide Head (Khalifatul Masih V) of the Ahmadiyya Muslim Community?",
+        options: [
+          "Hazrat Mirza Masroor Ahmad (aba)",
+          "Hazrat Mirza Tahir Ahmad (rh)",
+          "Hazrat Hakim Maulvi Nur-ud-Din (ra)",
+          "Hazrat Mirza Ghulam Ahmad (as)"
+        ],
+        answer: 0
+      },
+      {
+        q: "In which year did Hazrat Mirza Masroor Ahmad (aba) serve in Ghana before his Khilafat?",
+        options: ["1977 to 1985", "1990 to 1995", "1965 to 1970", "2000 to 2003"],
+        answer: 0
+      },
+      {
+        q: "What is the famous motto of the Ahmadiyya Muslim Community?",
+        options: [
+          "Love for All, Hatred for None",
+          "Peace Through Justice",
+          "Faith, Unity, Discipline",
+          "Service Before Self"
+        ],
+        answer: 0
+      },
+      {
+        q: "In which year was the Ahmadiyya Muslim Community founded?",
+        options: ["1889", "1901", "1835", "1908"],
+        answer: 0
+      },
+      {
+        q: "Where was the Promised Messiah, Hazrat Mirza Ghulam Ahmad (as), born?",
+        options: ["Qadian, India", "Rabwah, Pakistan", "Lahore, Pakistan", "Delhi, India"],
+        answer: 0
+      },
+      {
+        q: "What does 'Jalsa Salana' mean?",
+        options: [
+          "Annual Gathering",
+          "Festival of Sacrifice",
+          "Day of Unity",
+          "Peace Conference"
+        ],
+        answer: 0
+      },
+      {
+        q: "Who started the first Jalsa Salana in 1891?",
+        options: [
+          "Hazrat Mirza Ghulam Ahmad (as)",
+          "Hazrat Khalifatul Masih I (ra)",
+          "Hazrat Khalifatul Masih II (ra)",
+          "Hazrat Khalifatul Masih III (rh)"
+        ],
+        answer: 0
+      },
+      {
+        q: "What is the first Surah (chapter) of the Holy Qur'an?",
+        options: ["Surah Al-Fatihah", "Surah Al-Baqarah", "Surah Al-Ikhlas", "Surah An-Nas"],
+        answer: 0
+      },
+      {
+        q: "How many Surahs (chapters) are there in the Holy Qur'an?",
+        options: ["114", "110", "120", "99"],
+        answer: 0
+      },
+      {
+        q: "Which magazine is published specifically for Waqifeen-e-Nau?",
+        options: ["Ismail & Maryam", "The Review of Religions", "Al-Fazl", "Tariq"],
+        answer: 0
+      },
+      {
+        q: "Which auxiliary organization is for Ahmadi Muslim boys aged 7 to 15?",
+        options: ["Majlis Atfal-ul-Ahmadiyya", "Majlis Khuddam-ul-Ahmadiyya", "Majlis Ansarullah", "Lajna Ima'illah"],
+        answer: 0
+      },
+      {
+        q: "Which auxiliary organization is for Ahmadi Muslim men aged 15 to 40?",
+        options: ["Majlis Khuddam-ul-Ahmadiyya", "Majlis Ansarullah", "Majlis Atfal-ul-Ahmadiyya", "Nasirat-ul-Ahmadiyya"],
+        answer: 0
+      },
+      {
+        q: "Which auxiliary organization is for Ahmadi Muslim women aged 15 and above?",
+        options: ["Lajna Ima'illah", "Nasirat-ul-Ahmadiyya", "Majlis Ansarullah", "Waqf-e-Arzi"],
+        answer: 0
+      },
+      {
+        q: "How many daily obligatory prayers (Salat) are prescribed in Islam?",
+        options: ["5", "3", "7", "4"],
+        answer: 0
+      },
+      {
+        q: "In which city was the Holy Prophet Muhammad (sa) born?",
+        options: ["Makkah", "Madinah", "Jerusalem", "Ta'if"],
+        answer: 0
+      },
+      {
+        q: "What is the name of the first Khalifa of the Ahmadiyya Muslim Community?",
+        options: [
+          "Hazrat Hakim Maulvi Nur-ud-Din (ra)",
+          "Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)",
+          "Hazrat Mirza Nasir Ahmad (rh)",
+          "Hazrat Mirza Tahir Ahmad (rh)"
+        ],
+        answer: 0
+      },
+      {
+        q: "Which project of the Ahmadiyya Muslim Community provides clean water, schools, and hospitals in Africa?",
+        options: ["Mta International", "Nusrat Jehan Scheme", "Waqf-e-Jadid", "Tehrik-e-Jadid"],
+        answer: 1
+      },
+      {
+        q: "Which agricultural innovation did Hazrat Mirza Masroor Ahmad (aba) successfully pioneer while serving in Ghana?",
+        options: [
+          "Growing wheat in Ghana for the first time",
+          "Importing cocoa to Europe",
+          "Building the Akosombo Dam",
+          "Planting rubber trees in Accra"
+        ],
+        answer: 0
+      },
+      {
+        q: "What are the official colors of Waqf-e-Nau?",
+        options: ["Blue and White", "Green and Gold", "Black and White", "Red and White"],
+        answer: 0
+      },
+      {
+        q: "What is the name of the global satellite television network of the Ahmadiyya Muslim Community?",
+        options: ["MTA International", "Peace TV", "Al-Islam TV", "Qadian Broadcasting"],
+        answer: 0
+      }
+    ];
+
+    // =========================================================================
+    // 3. QUIZ STATE & CORE LOGIC
+    // =========================================================================
+    const QUESTIONS_PER_QUIZ = 20;
+
+    let currentUser = {
+      fullName: "",
+      email: "",
+      profession: ""
+    };
+
+    let activeQuestions = [];
+    let currentIndex = 0;
+    let selectedOptionIndex = null;
+    let score = 0;
+    let timerInterval = null;
+    let startTimeMs = 0;
+    let elapsedSeconds = 0;
+    let quizCompleted = false;
+
+    // Fisher-Yates Shuffle
+    function shuffleArray(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function formatTime(totalSec) {
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function switchTab(tab) {
+      const tabQuiz = document.getElementById("tabQuiz");
+      const tabLb = document.getElementById("tabLeaderboard");
+      const viewReg = document.getElementById("viewRegister");
+      const viewQuiz = document.getElementById("viewQuiz");
+      const viewRes = document.getElementById("viewResults");
+      const viewLb = document.getElementById("viewLeaderboard");
+
+      if (tab === "leaderboard") {
+        tabQuiz.classList.remove("active");
+        tabLb.classList.add("active");
+        viewReg.classList.add("hidden");
+        viewQuiz.classList.add("hidden");
+        viewRes.classList.add("hidden");
+        viewLb.classList.remove("hidden");
+        loadLeaderboard();
+      } else {
+        tabLb.classList.remove("active");
+        tabQuiz.classList.add("active");
+        viewLb.classList.add("hidden");
+
+        if (activeQuestions.length > 0 && !quizCompleted) {
+          viewQuiz.classList.remove("hidden");
+        } else if (quizCompleted) {
+          viewRes.classList.remove("hidden");
+        } else {
+          viewReg.classList.remove("hidden");
+        }
+      }
+    }
+
+    function handleStartQuiz(event) {
+      event.preventDefault();
+      currentUser.fullName = document.getElementById("fullName").value.trim();
+      currentUser.email = document.getElementById("email").value.trim().toLowerCase();
+      currentUser.profession = document.getElementById("profession").value.trim();
+
+      if (!currentUser.fullName || !currentUser.email || !currentUser.profession) return;
+
+      beginFreshQuizSession();
+    }
+
+    function beginFreshQuizSession() {
+      // Pick 20 random questions and shuffle their options
+      const count = Math.min(QUESTIONS_PER_QUIZ, QUESTION_BANK.length);
+      const picked = shuffleArray(QUESTION_BANK).slice(0, count);
+
+      activeQuestions = picked.map((item) => {
+        const correctText = item.options[item.answer];
+        const shuffledOptions = shuffleArray(item.options);
+        return {
+          q: item.q,
+          options: shuffledOptions,
+          answer: shuffledOptions.indexOf(correctText)
+        };
+      });
+
+      currentIndex = 0;
+      score = 0;
+      quizCompleted = false;
+      selectedOptionIndex = null;
+
+      document.getElementById("viewRegister").classList.add("hidden");
+      document.getElementById("viewResults").classList.add("hidden");
+      document.getElementById("viewLeaderboard").classList.add("hidden");
+      document.getElementById("viewQuiz").classList.remove("hidden");
+
+      startTimer();
+      renderQuestion();
+    }
+
+    function restartWithNewQuestions() {
+      if (confirm("Restart now? You will get 20 completely new random questions and your timer will reset.")) {
+        stopTimer();
+        beginFreshQuizSession();
+      }
+    }
+
+    function retakeQuizFromResults() {
+      stopTimer();
+      beginFreshQuizSession();
+    }
+
+    function startTimer() {
+      stopTimer();
+      startTimeMs = Date.now();
+      elapsedSeconds = 0;
+      document.getElementById("timerDisplay").textContent = "00:00";
+
+      timerInterval = setInterval(() => {
+        elapsedSeconds = Math.floor((Date.now() - startTimeMs) / 1000);
+        document.getElementById("timerDisplay").textContent = formatTime(elapsedSeconds);
+      }, 500);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function renderQuestion() {
+      const total = activeQuestions.length;
+      const currentQ = activeQuestions[currentIndex];
+      selectedOptionIndex = null;
+
+      document.getElementById("questionCounter").textContent = `Question ${currentIndex + 1} of ${total}`;
+      document.getElementById("progressBar").style.width = `${((currentIndex + 1) / total) * 100}%`;
+      document.getElementById("questionText").textContent = currentQ.q;
+
+      const nextBtn = document.getElementById("nextBtn");
+      nextBtn.disabled = true;
+      nextBtn.textContent = currentIndex === total - 1 ? "Submit Quiz ✓" : "Next Question →";
+
+      const container = document.getElementById("optionsContainer");
+      container.innerHTML = "";
+      const letters = ["A", "B", "C", "D"];
+
+      currentQ.options.forEach((optText, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "option-btn";
+        btn.innerHTML = `<span class="option-letter">${letters[idx]}</span><span>${optText}</span>`;
+        btn.onclick = () => selectOption(idx, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectOption(idx, clickedBtn) {
+      selectedOptionIndex = idx;
+      document.querySelectorAll(".option-btn").forEach((b) => b.classList.remove("selected"));
+      clickedBtn.classList.add("selected");
+      document.getElementById("nextBtn").disabled = false;
+    }
+
+    async function handleNextQuestion() {
+      if (selectedOptionIndex === null) return;
+
+      if (selectedOptionIndex === activeQuestions[currentIndex].answer) {
+        score++;
+      }
+
+      if (currentIndex < activeQuestions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        await finishQuiz();
+      }
+    }
+
+    async function finishQuiz() {
+      stopTimer();
+      quizCompleted = true;
+      const total = activeQuestions.length;
+      const finalSeconds = Math.max(1, Math.floor((Date.now() - startTimeMs) / 1000));
+      const accuracy = Math.round((score / total) * 100);
+
+      document.getElementById("viewQuiz").classList.add("hidden");
+      document.getElementById("viewResults").classList.remove("hidden");
+
+      document.getElementById("resAccuracy").textContent = `${accuracy}%`;
+      document.getElementById("resPlayerName").textContent = currentUser.fullName;
+      document.getElementById("resPlayerProf").textContent = currentUser.profession;
+      document.getElementById("resScore").textContent = `${score} / ${total}`;
+      document.getElementById("resTime").textContent = formatTime(finalSeconds);
+
+      const statusMsg = document.getElementById("saveStatusMsg");
+      statusMsg.textContent = "Updating live Jalsa Salana leaderboard...";
+
+      const record = {
+        email: currentUser.email,
+        full_name: currentUser.fullName,
+        profession: currentUser.profession,
+        score: score,
+        total_questions: total,
+        accuracy: accuracy,
+        time_seconds: finalSeconds,
+        updated_at: new Date().toISOString()
+      };
+
+      await saveResultToDatabase(record);
+      statusMsg.textContent = "✓ Your result is live on the leaderboard!";
+    }
+
+    // =========================================================================
+    // 4. DATABASE SYNC (SUPABASE + LOCAL FALLBACK)
+    // Upserts by email so retaking automatically overwrites previous entry.
+    // =========================================================================
+    async function saveResultToDatabase(record) {
+      if (supabaseClient) {
+        const { error } = await supabaseClient
+          .from("leaderboard")
+          .upsert(record, { onConflict: "email" });
+
+        if (error) {
+          console.error("Supabase upsert error:", error);
+          document.getElementById("saveStatusMsg").textContent =
+            "Saved locally (Check Supabase table permissions).";
+        }
+      } else {
+        // LocalStorage fallback for testing before Supabase keys are added
+        const existing = JSON.parse(localStorage.getItem("wen_ghana_lb") || "[]");
+        const filtered = existing.filter((item) => item.email !== record.email);
+        filtered.push(record);
+        localStorage.setItem("wen_ghana_lb", JSON.stringify(filtered));
+      }
+    }
+
+    async function loadLeaderboard() {
+      const listEl = document.getElementById("leaderboardList");
+      listEl.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">Fetching Top 10...</p>`;
+
+      let rows = [];
+
+      if (supabaseClient) {
+        const { data, error } = await supabaseClient
+          .from("leaderboard")
+          .select("*")
+          .order("accuracy", { ascending: false })
+          .order("time_seconds", { ascending: true })
+          .limit(10);
+
+        if (error) {
+          console.error("Supabase fetch error:", error);
+          listEl.innerHTML = `<p style="text-align:center;color:var(--danger);padding:20px;">Error loading leaderboard. Check Supabase configuration.</p>`;
+          return;
+        }
+        rows = data || [];
+      } else {
+        const existing = JSON.parse(localStorage.getItem("wen_ghana_lb") || "[]");
+        rows = existing
+          .sort((a, b) => {
+            if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+            return a.time_seconds - b.time_seconds;
+          })
+          .slice(0, 10);
+      }
+
+      if (rows.length === 0) {
+        listEl.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">No participants yet. Be the first to take the quiz!</p>`;
+        return;
+      }
+
+      listEl.innerHTML = "";
+      rows.forEach((row, index) => {
+        const rank = index + 1;
+        const topClass = rank === 1 ? "top-1" : rank === 2 ? "top-2" : rank === 3 ? "top-3" : "";
+
+        const item = document.createElement("div");
+        item.className = `lb-item ${topClass}`;
+        item.innerHTML = `
+          <div class="lb-rank">${rank}</div>
+          <div class="lb-user">
+            <div class="lb-name">${escapeHtml(row.full_name)}</div>
+            <div class="lb-prof">${escapeHtml(row.profession)}</div>
+          </div>
+          <div class="lb-metrics">
+            <div class="lb-acc">${row.accuracy}%</div>
+            <div class="lb-time">⏱ ${formatTime(row.time_seconds)}</div>
+          </div>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
