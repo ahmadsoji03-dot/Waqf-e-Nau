@@ -1073,22 +1073,17 @@
     <!-- ADMIN PORTAL VIEWS                                                  -->
     <!-- =================================================================== -->
 
-    <!-- VIEW 5: ADMIN LOGIN -->
+    <!-- VIEW 5: ADMIN LOGIN (PIN ONLY) -->
     <section class="card hidden" id="viewAdminLogin">
       <h2 class="form-title">Admin Portal Login</h2>
       <p class="form-subtitle">
-        Authorized Waqf-e-Nau Exhibition team members can log in here to open/close the Word Puzzle round, add words/questions, upload Word (.docx) files, or manage leaderboards.
+        Enter the Admin Access PIN to manage the Word Puzzle round, add quiz questions, upload Word (.docx) files, or view leaderboards.
       </p>
 
       <form onsubmit="handleAdminLogin(event)">
         <div class="form-group">
-          <label for="adminEmailInput">Registered Admin Email *</label>
-          <input type="email" id="adminEmailInput" placeholder="Enter your authorized admin email" required />
-        </div>
-
-        <div class="form-group">
           <label for="adminPinInput">Admin Access PIN *</label>
-          <input type="password" id="adminPinInput" placeholder="Enter Admin PIN" required />
+          <input type="password" id="adminPinInput" placeholder="Enter PIN (e.g. 2026)" required />
         </div>
 
         <p id="adminLoginError" style="color: var(--danger); font-size: 0.86rem; font-weight: 600; margin-bottom: 12px;"></p>
@@ -1103,7 +1098,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
         <div>
           <h2 class="form-title" style="margin-bottom: 2px;">Admin Dashboard</h2>
-          <p id="loggedInAdminLabel" style="font-size: 0.82rem; color: var(--primary-blue); font-weight: 600;"></p>
+          <p style="font-size: 0.82rem; color: var(--primary-blue); font-weight: 600;">Logged in as: Administrator</p>
         </div>
         <button class="btn-danger-outline" onclick="logoutAdmin()">Logout</button>
       </div>
@@ -1253,13 +1248,7 @@ D. 1992</pre>
     const SUPABASE_URL = "https://bwnnmsicsclwekpkyuez.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_BCNISL4k2zwKbhSfCjKQUg_o83RyeNz";
 
-    const ADMIN_EMAILS = [
-      "ahmad@gmail.com",
-      "admin2@gmail.com",
-      "admin3@gmail.com",
-      "admin4@gmail.com"
-    ];
-    const ADMIN_ACCESS_PIN = "2026";
+    const ADMIN_ACCESS_PIN = "2026"; // Anyone who knows this PIN can log in as admin
 
     let supabaseClient = null;
     const isSupabaseConfigured =
@@ -2250,9 +2239,9 @@ D. 1992</pre>
     }
 
     // =========================================================================
-    // 6. ADMIN PORTAL LOGIC
+    // 6. ADMIN PORTAL LOGIC (PIN-ONLY LOGIN)
     // =========================================================================
-    let loggedInAdminEmail = null;
+    let isAdminLoggedIn = false;
     let parsedDocxQuestions = [];
 
     function openAdminPortal() {
@@ -2261,9 +2250,10 @@ D. 1992</pre>
       document.getElementById("mainNavTabs").classList.add("hidden");
       hideAllViews();
 
-      if (loggedInAdminEmail) {
+      if (isAdminLoggedIn) {
         showAdminDashboard();
       } else {
+        document.getElementById("adminPinInput").value = "";
         document.getElementById("adminLoginError").textContent = "";
         document.getElementById("viewAdminLogin").classList.remove("hidden");
       }
@@ -2275,34 +2265,27 @@ D. 1992</pre>
 
     function handleAdminLogin(event) {
       event.preventDefault();
-      const emailInput = document.getElementById("adminEmailInput").value.trim().toLowerCase();
       const pinInput = document.getElementById("adminPinInput").value.trim();
       const errorEl = document.getElementById("adminLoginError");
 
-      if (!ADMIN_EMAILS.includes(emailInput)) {
-        errorEl.textContent = "Access Denied: This email is not registered as an Admin.";
-        return;
-      }
-
       if (pinInput !== ADMIN_ACCESS_PIN) {
-        errorEl.textContent = "Incorrect Admin PIN.";
+        errorEl.textContent = "Incorrect Admin PIN. Please try again.";
         return;
       }
 
-      loggedInAdminEmail = emailInput;
+      isAdminLoggedIn = true;
       document.getElementById("adminPinInput").value = "";
       showAdminDashboard();
     }
 
     function logoutAdmin() {
-      loggedInAdminEmail = null;
+      isAdminLoggedIn = false;
       switchTab("quiz");
     }
 
     async function showAdminDashboard() {
       hideAllViews();
       document.getElementById("viewAdminDashboard").classList.remove("hidden");
-      document.getElementById("loggedInAdminLabel").textContent = `Logged in as: ${loggedInAdminEmail}`;
       await syncQuestionBank();
       await syncPuzzleWordsBank();
       switchAdminSubtab("wsControl");
