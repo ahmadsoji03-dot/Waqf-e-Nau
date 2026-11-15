@@ -57,8 +57,8 @@
     }
 
     .logo-wrapper {
-      width: 96px;
-      height: 96px;
+      width: 88px;
+      height: 88px;
       margin: 0 auto 12px;
       background: var(--white);
       border-radius: 50%;
@@ -73,7 +73,7 @@
     .logo-wrapper img {
       width: 100%;
       height: 100%;
-      object-fit: cover; /* Changed from contain to cover so square images fill the circular badge completely without side gaps */
+      object-fit: cover;
       object-position: center;
     }
 
@@ -176,16 +176,17 @@
       margin-bottom: 5px;
     }
 
-    .form-group input, .form-group textarea {
+    .form-group input, .form-group textarea, .form-group select {
       width: 100%;
       padding: 11px 14px;
       border: 1.5px solid var(--border-color);
       border-radius: 10px;
       font-size: 0.98rem;
       transition: border-color 0.2s;
+      background: var(--white);
     }
 
-    .form-group input:focus, .form-group textarea:focus {
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
       outline: none;
       border-color: var(--primary-blue);
       box-shadow: 0 0 0 3px var(--light-blue);
@@ -956,8 +957,8 @@
         <h2 class="form-title" style="margin-bottom: 0;">Live Word Search Challenge</h2>
         <button class="lb-refresh-btn" onclick="checkWordSearchPortalStatus(true)">↻ Check Status</button>
       </div>
-      <p class="form-subtitle">
-        Find all <strong>20 hidden Islamic & Ahmadiyya words</strong> inside the letter grid in the shortest time!
+      <p class="form-subtitle" id="wsLobbySubtitle">
+        Find all hidden Islamic & Ahmadiyya words inside the letter grid in the shortest time!
       </p>
 
       <!-- CLOSED STATE -->
@@ -974,7 +975,7 @@
 
       <!-- OPEN STATE (REGISTRATION FORM) -->
       <div id="wsOpenPanel" class="hidden">
-        <div style="background: var(--success-bg); border: 1px solid #86EFAC; color: var(--success); padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 0.88rem; margin-bottom: 16px; text-align: center;">
+        <div style="background: var(--success-bg); border: 1px solid #86EFAC; color: var(--success); padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 0.88rem; margin-bottom: 16px; text-align: center;" id="wsLiveBannerText">
           🟢 LIVE ROUND IS OPEN! Enter your details to join the race!
         </div>
 
@@ -1015,7 +1016,7 @@
       </div>
 
       <div class="ws-word-bank-title">
-        <span>Search for these 20 hidden words:</span>
+        <span id="wsTargetWordsHeader">Search for these hidden words:</span>
         <button type="button" class="btn-danger-outline" style="padding: 4px 10px; font-size: 0.76rem;" onclick="clearCurrentWsSelection()">Clear Tap</button>
       </div>
 
@@ -1026,7 +1027,7 @@
     <section class="card hidden" id="viewWsResults">
       <div class="result-banner">
         <div class="result-score-circle" style="border-color: var(--success); background: var(--success-bg);">
-          <span class="pct" style="color: var(--success);">20/20</span>
+          <span class="pct" id="wsResPct" style="color: var(--success);">20/20</span>
           <span class="lbl" style="color: var(--success);">Completed</span>
         </div>
         <h2 class="form-title" id="wsResPlayerName">Masha'Allah!</h2>
@@ -1057,7 +1058,7 @@
       <div class="lb-header">
         <div>
           <h2 class="form-title" style="margin-bottom: 2px;">Word Puzzle Top 10</h2>
-          <p style="font-size: 0.82rem; color: var(--text-muted);">Ranked by Fastest Time to Find All 20 Words</p>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Ranked by Most Words Found, then Fastest Time</p>
         </div>
         <button class="lb-refresh-btn" onclick="loadWsLeaderboard()">↻ Refresh</button>
       </div>
@@ -1073,7 +1074,7 @@
     <!-- ADMIN PORTAL VIEWS                                                  -->
     <!-- =================================================================== -->
 
-    <!-- VIEW 5: ADMIN LOGIN (PIN ONLY - "Jalsa 2026") -->
+    <!-- VIEW 5: ADMIN LOGIN -->
     <section class="card hidden" id="viewAdminLogin">
       <h2 class="form-title">Admin Portal Login</h2>
       <p class="form-subtitle">
@@ -1083,7 +1084,7 @@
       <form onsubmit="handleAdminLogin(event)">
         <div class="form-group">
           <label for="adminPinInput">Admin Access PIN *</label>
-          <input type="password" id="adminPinInput" placeholder="Enter PIN (e.g. Jalsa 2026)" required />
+          <input type="password" id="adminPinInput" placeholder="e.g. secret code" required />
         </div>
 
         <p id="adminLoginError" style="color: var(--danger); font-size: 0.86rem; font-weight: 600; margin-bottom: 12px;"></p>
@@ -1112,7 +1113,7 @@
         <button class="admin-subtab" id="subtabFullLb" onclick="switchAdminSubtab('fullLb')">Leaderboards</button>
       </div>
 
-      <!-- ADMIN PANEL 0: WORD PUZZLE LIVE CONTROL & WORD BANK -->
+      <!-- ADMIN PANEL 0: WORD PUZZLE LIVE CONTROL & WORD SELECTION -->
       <div id="adminPanelWsControl">
         <div class="ws-control-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
@@ -1123,9 +1124,19 @@
             <span id="adminWsRoundLabel" style="font-size: 0.82rem; font-weight: 700; color: var(--primary-blue);">Round #1</span>
           </div>
           <p style="font-size: 0.85rem; color: var(--text-dark); margin-bottom: 14px; line-height: 1.45;">
-            When you click <strong>Open Portal & Start New Round</strong>, a fresh set of <strong>20 random words</strong> is selected from your word bank and unlocked for everyone at the exhibition simultaneously!
+            Select the word count (10, 15, or 20 words), check/uncheck the specific words you want for this round, and click <strong>Open Portal & Start New Round</strong>!
           </p>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="adminWordCountSelect"><strong>1. Select Number of Words for this Round:</strong></label>
+            <select id="adminWordCountSelect" onchange="onAdminWordCountChanged()">
+              <option value="10">10 Words</option>
+              <option value="15">15 Words</option>
+              <option value="20" selected>20 Words (Default)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
             <button type="button" class="btn btn-success" style="flex: 1; min-width: 180px;" id="btnOpenWsRound" onclick="adminOpenNewWordSearchRound()">
               🟢 Open Portal & Start New Round
             </button>
@@ -1135,16 +1146,29 @@
           </div>
         </div>
 
-        <h3 style="font-size: 1rem; color: var(--dark-blue); margin-bottom: 8px;">Add Words to Word Puzzle Bank (<span id="totalWsWordsCount">0</span> Words Available)</h3>
+        <!-- Word Selection Checklist Container -->
+        <div style="margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="font-size: 0.92rem; color: var(--dark-blue);">2. Select Specific Words for Current Round (<span id="selectedWordsCountBadge">0</span> Selected):</strong>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="lb-refresh-btn" onclick="adminSelectAllWords(true)">Select All</button>
+              <button type="button" class="lb-refresh-btn" onclick="adminSelectAllWords(false)">Deselect All</button>
+            </div>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;">
+            Check the exact words you wish to include in the puzzle grid. (The system will automatically pick up to your chosen word count).
+          </p>
+          <div id="adminWordChecklistGrid" style="max-height: 220px; overflow-y: auto; background: var(--off-white); padding: 12px; border-radius: 10px; border: 1px solid #E2E8F0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;"></div>
+        </div>
+
+        <h3 style="font-size: 1rem; color: var(--dark-blue); margin-bottom: 8px;">Add New Words to Word Bank</h3>
         <form onsubmit="handleAddPuzzleWords(event)" style="margin-bottom: 16px;">
           <div class="form-group">
             <label>Enter new words (Letters only, 3–13 letters long, separated by commas or new lines)</label>
-            <textarea id="newPuzzleWordsInput" rows="3" placeholder="e.g., KHILAFAT, QADIAN, RABWAH, TAHIR, MASROOR, SALAT, ZAKAT" required></textarea>
+            <textarea id="newPuzzleWordsInput" rows="2" placeholder="e.g., KHILAFAT, QADIAN, RABWAH, TAHIR" required></textarea>
           </div>
-          <button type="submit" class="btn btn-primary" id="saveWsWordsBtn">Add Words to Puzzle Bank</button>
+          <button type="submit" class="btn btn-primary" id="saveWsWordsBtn">Add Words to Bank</button>
         </form>
-
-        <div id="adminWsWordsPreview" style="max-height: 180px; overflow-y: auto; background: var(--off-white); padding: 10px; border-radius: 10px; border: 1px solid #E2E8F0; font-size: 0.82rem; line-height: 1.7;"></div>
       </div>
 
       <!-- ADMIN PANEL A: ADD SINGLE QUESTION -->
@@ -1248,7 +1272,7 @@ D. 1992</pre>
     const SUPABASE_URL = "https://bwnnmsicsclwekpkyuez.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_BCNISL4k2zwKbhSfCjKQUg_o83RyeNz";
 
-    const ADMIN_ACCESS_PIN = "Jalsa 2026"; // Updated PIN with space
+    const ADMIN_ACCESS_PIN = "Jalsa 2026"; // Admin password with space
 
     let supabaseClient = null;
     const isSupabaseConfigured =
@@ -1264,7 +1288,7 @@ D. 1992</pre>
     }
 
     // =========================================================================
-    // 2. BUILT-IN QUESTION BANK & WORD PUZZLE BANK (100+ WORDS)
+    // 2. BUILT-IN QUESTION BANK & WORD PUZZLE BANK
     // =========================================================================
     const STARTER_QUESTIONS = [
       {
@@ -1449,7 +1473,6 @@ D. 1992</pre>
       }
     ];
 
-    // 105 Built-in Islamic, Ahmadiyya & Waqf-e-Nau Words (3 to 12 letters)
     const STARTER_PUZZLE_WORDS = [
       "WAQFENAU", "AHMADIYYA", "KHILAFAT", "QADIAN", "RABWAH", "MASROOR", "TAHIR", "NASIR",
       "MAHMUD", "NURUDDIN", "GHULAM", "AHMAD", "MUHAMMAD", "ISLAM", "QURAN", "SALAT",
@@ -1502,7 +1525,6 @@ D. 1992</pre>
         const combined = new Set([...dbWords, ...STARTER_PUZZLE_WORDS]);
         allPuzzleWordsPool = Array.from(combined).filter((w) => w.length >= 3 && w.length <= 13);
       }
-      document.getElementById("totalWsWordsCount").textContent = allPuzzleWordsPool.length;
     }
 
     syncQuestionBank();
@@ -1845,13 +1867,14 @@ D. 1992</pre>
     }
 
     // =========================================================================
-    // 5. MODE 2: ADMIN-GATED WORD SEARCH PUZZLE CHALLENGE (15x15 GRID)
+    // 5. MODE 2: ADMIN-CONTROLLED WORD SEARCH PUZZLE (15x15 GRID)
     // =========================================================================
     const GRID_SIZE = 15;
     let wsPortalState = {
       is_open: false,
       round_number: 1,
-      active_words: []
+      active_words: [],
+      word_count: 20
     };
 
     let wsUser = { fullName: "", email: "", profession: "" };
@@ -1885,6 +1908,9 @@ D. 1992</pre>
       if (wsPortalState.is_open && wsPortalState.active_words && wsPortalState.active_words.length > 0) {
         closedPanel.classList.add("hidden");
         openPanel.classList.remove("hidden");
+        const count = wsPortalState.active_words.length;
+        document.getElementById("wsLobbySubtitle").innerHTML =
+          `Find all <strong>${count} hidden Islamic & Ahmadiyya words</strong> inside the letter grid in the shortest time!`;
       } else {
         openPanel.classList.add("hidden");
         closedPanel.classList.remove("hidden");
@@ -1921,6 +1947,8 @@ D. 1992</pre>
       wsActive = true;
       wsCompleted = false;
 
+      document.getElementById("wsTargetWordsHeader").textContent = `Search for these ${wsTargetWords.length} hidden words:`;
+
       buildWordSearchGrid(wsTargetWords);
       renderWordSearchBoard();
 
@@ -1940,7 +1968,6 @@ D. 1992</pre>
         [-1, 0]   // Vertical Up
       ];
 
-      // Sort longest words first so they place cleanly
       const sortedWords = [...words].sort((a, b) => b.length - a.length);
 
       sortedWords.forEach((word) => {
@@ -1977,7 +2004,6 @@ D. 1992</pre>
         }
       });
 
-      // Fill empty cells with random A-Z letters
       const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
       for (let r = 0; r < GRID_SIZE; r++) {
         for (let c = 0; c < GRID_SIZE; c++) {
@@ -2004,7 +2030,6 @@ D. 1992</pre>
             cell.classList.add("found");
           }
 
-          // Pointer & Touch Drag + Tap Support
           cell.addEventListener("pointerdown", (e) => {
             e.preventDefault();
             handleCellPointerDown(r, c);
@@ -2017,7 +2042,6 @@ D. 1992</pre>
         }
       }
 
-      // Support touchmove across cells on mobile/tablets
       gridEl.ontouchmove = (e) => {
         if (!wsIsDragging) return;
         const touch = e.touches[0];
@@ -2090,7 +2114,6 @@ D. 1992</pre>
     }
 
     function handleCellPointerDown(r, c) {
-      // Check if user is completing a 2-tap selection
       if (wsTapStartCell && (wsTapStartCell[0] !== r || wsTapStartCell[1] !== c)) {
         const line = getLineCells(wsTapStartCell[0], wsTapStartCell[1], r, c);
         if (line) {
@@ -2169,6 +2192,7 @@ D. 1992</pre>
       document.getElementById("wsResPlayerName").textContent = wsUser.fullName;
       document.getElementById("wsResPlayerProf").textContent = wsUser.profession;
       document.getElementById("wsResFound").textContent = `${wsTargetWords.length} / ${wsTargetWords.length}`;
+      document.getElementById("wsResPct").textContent = `${wsTargetWords.length}/${wsTargetWords.length}`;
       document.getElementById("wsResTime").textContent = formatTime(finalSeconds);
 
       const statusMsg = document.getElementById("wsSaveStatusMsg");
@@ -2231,7 +2255,7 @@ D. 1992</pre>
           </div>
           <div class="lb-metrics">
             <div class="lb-acc">⏱ ${formatTime(row.time_seconds)}</div>
-            <div class="lb-time">${row.words_found}/20 Words</div>
+            <div class="lb-time">${row.words_found} Words</div>
           </div>
         `;
         listEl.appendChild(item);
@@ -2239,7 +2263,7 @@ D. 1992</pre>
     }
 
     // =========================================================================
-    // 6. ADMIN PORTAL LOGIC (PIN-ONLY LOGIN - "Jalsa 2026")
+    // 6. ADMIN PORTAL LOGIC & WORD SELECTION
     // =========================================================================
     let isAdminLoggedIn = false;
     let parsedDocxQuestions = [];
@@ -2269,7 +2293,7 @@ D. 1992</pre>
       const errorEl = document.getElementById("adminLoginError");
 
       if (pinInput !== ADMIN_ACCESS_PIN) {
-        errorEl.textContent = "Incorrect Admin PIN. Please try again.";
+        errorEl.textContent = "Incorrect Admin PIN. Please try again (e.g. Jalsa 2026).";
         return;
       }
 
@@ -2320,7 +2344,7 @@ D. 1992</pre>
       }
     }
 
-    // Word Puzzle Admin Controls
+    // Word Puzzle Admin Controls & Checklist
     async function refreshAdminWsControlPanel() {
       await checkWordSearchPortalStatus(false);
       await syncPuzzleWordsBank();
@@ -2337,17 +2361,67 @@ D. 1992</pre>
         badge.className = "status-pill closed";
       }
 
-      document.getElementById("adminWsWordsPreview").innerHTML =
-        `<strong>Word Bank (${allPuzzleWordsPool.length} words):</strong> ` +
-        allPuzzleWordsPool.join(", ");
+      renderAdminWordChecklist();
+    }
+
+    function renderAdminWordChecklist() {
+      const grid = document.getElementById("adminWordChecklistGrid");
+      grid.innerHTML = "";
+
+      const activeSet = new Set(wsPortalState.active_words || []);
+      const countSelect = parseInt(document.getElementById("adminWordCountSelect").value, 10) || 20;
+
+      // If active_words isn't set yet, pre-select first N words
+      const defaultCheck = activeSet.size > 0 ? activeSet : new Set(allPuzzleWordsPool.slice(0, countSelect));
+
+      allPuzzleWordsPool.forEach((word) => {
+        const isChecked = defaultCheck.has(word);
+        const label = document.createElement("label");
+        label.style.display = "flex";
+        label.style.alignItems = "center";
+        label.style.gap = "6px";
+        label.style.fontSize = "0.82rem";
+        label.style.cursor = "pointer";
+        label.style.background = "var(--white)";
+        label.style.padding = "6px 8px";
+        label.style.borderRadius = "6px";
+        label.style.border = "1px solid #CBD5E0";
+
+        label.innerHTML = `
+          <input type="checkbox" class="admin-word-chk" value="${word}" ${isChecked ? "checked" : ""} onchange="updateSelectedWordsCountBadge()" />
+          <span style="font-weight: 700; color: var(--text-dark);">${word}</span>
+        `;
+        grid.appendChild(label);
+      });
+
+      updateSelectedWordsCountBadge();
+    }
+
+    function updateSelectedWordsCountBadge() {
+      const checked = document.querySelectorAll(".admin-word-chk:checked");
+      document.getElementById("selectedWordsCountBadge").textContent = checked.length;
+    }
+
+    function adminSelectAllWords(select) {
+      document.querySelectorAll(".admin-word-chk").forEach((chk) => {
+        chk.checked = select;
+      });
+      updateSelectedWordsCountBadge();
+    }
+
+    function onAdminWordCountChanged() {
+      // Optional helper when word count dropdown changes
+      updateSelectedWordsCountBadge();
     }
 
     async function adminOpenNewWordSearchRound() {
       if (!supabaseClient) return;
-      await syncPuzzleWordsBank();
 
-      if (allPuzzleWordsPool.length < 20) {
-        alert("You need at least 20 words in the word bank to start a round.");
+      const checkedBoxes = document.querySelectorAll(".admin-word-chk:checked");
+      const targetCount = parseInt(document.getElementById("adminWordCountSelect").value, 10) || 20;
+
+      if (checkedBoxes.length < targetCount) {
+        alert(`You selected ${checkedBoxes.length} words, but your target word count is ${targetCount}. Please check more words or change the target count.`);
         return;
       }
 
@@ -2355,7 +2429,9 @@ D. 1992</pre>
       btn.disabled = true;
       btn.textContent = "Opening Live Round...";
 
-      const picked20 = shuffleArray(allPuzzleWordsPool).slice(0, 20);
+      // Gather checked words
+      const selectedWords = Array.from(checkedBoxes).map((chk) => chk.value);
+      const finalWordsForRound = shuffleArray(selectedWords).slice(0, targetCount);
       const nextRound = (wsPortalState.round_number || 0) + 1;
 
       const { error } = await supabaseClient
@@ -2364,7 +2440,8 @@ D. 1992</pre>
           id: 1,
           is_open: true,
           round_number: nextRound,
-          active_words: picked20,
+          active_words: finalWordsForRound,
+          word_count: targetCount,
           updated_at: new Date().toISOString()
         });
 
@@ -2375,7 +2452,7 @@ D. 1992</pre>
         alert("Error opening round. Make sure you ran the Word Search SQL tables in Supabase.");
         console.error(error);
       } else {
-        alert(`Round #${nextRound} is now LIVE with 20 new hidden words! Visitors can now enter the Word Puzzle.`);
+        alert(`Round #${nextRound} is LIVE with ${targetCount} selected words! Visitors can now participate.`);
         refreshAdminWsControlPanel();
       }
     }
@@ -2389,6 +2466,7 @@ D. 1992</pre>
           is_open: false,
           round_number: wsPortalState.round_number || 1,
           active_words: wsPortalState.active_words || [],
+          word_count: wsPortalState.word_count || 20,
           updated_at: new Date().toISOString()
         });
 
@@ -2423,17 +2501,18 @@ D. 1992</pre>
           .upsert(rows, { onConflict: "word" });
 
         if (error) {
-          alert("Error saving words. Check that you ran the 'word_search_words' table SQL.");
+          alert("Error saving words. Check your Supabase table.");
           console.error(error);
         } else {
-          alert(`Added ${uniqueNew.length} words to your puzzle bank!`);
+          alert(`Added ${uniqueNew.length} words to your bank!`);
           document.getElementById("newPuzzleWordsInput").value = "";
-          refreshAdminWsControlPanel();
+          await syncPuzzleWordsBank();
+          renderAdminWordChecklist();
         }
       }
 
       btn.disabled = false;
-      btn.textContent = "Add Words to Puzzle Bank";
+      btn.textContent = "Add Words to Bank";
     }
 
     // Add Single Quiz Question
@@ -2595,7 +2674,6 @@ D. 1992</pre>
       btn.textContent = "Upload All Questions to Live Quiz";
     }
 
-    // Manage Questions List
     async function renderAdminQuestionsList() {
       await syncQuestionBank();
       const container = document.getElementById("adminQuestionsList");
@@ -2629,7 +2707,6 @@ D. 1992</pre>
       }
     }
 
-    // Admin Full Leaderboards Management
     async function loadAdminFullLeaderboards() {
       const qContainer = document.getElementById("adminFullLeaderboardList");
       const wsContainer = document.getElementById("adminFullWsLeaderboardList");
@@ -2690,7 +2767,7 @@ D. 1992</pre>
             </div>
             <div class="lb-metrics" style="margin-right: 8px;">
               <div class="lb-acc">⏱ ${formatTime(row.time_seconds)}</div>
-              <div class="lb-time">${row.words_found}/20 Words</div>
+              <div class="lb-time">${row.words_found} Words</div>
             </div>
             <button class="btn-danger-outline" onclick="deleteWsLeaderboardEntry('${row.email}')">Remove</button>
           `;
