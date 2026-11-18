@@ -45,7 +45,7 @@
 
     .container {
       width: 100%;
-      max-width: 760px;
+      max-width: 780px;
       margin: 0 auto;
     }
 
@@ -235,8 +235,8 @@
       background: transparent;
       border: 1.5px solid #FCA5A5;
       color: var(--danger);
-      padding: 7px 12px;
-      font-size: 0.82rem;
+      padding: 6px 10px;
+      font-size: 0.8rem;
       width: auto;
       border-radius: 8px;
       cursor: pointer;
@@ -245,6 +245,22 @@
 
     .btn-danger-outline:hover {
       background: var(--danger-bg);
+    }
+
+    .btn-edit-outline {
+      background: transparent;
+      border: 1.5px solid #93C5FD;
+      color: var(--primary-blue);
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      width: auto;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-edit-outline:hover {
+      background: var(--light-blue);
     }
 
     /* Quiz Top Bar */
@@ -389,21 +405,12 @@
 
     .ws-grid {
       display: grid;
-      grid-template-columns: repeat(15, minmax(21px, 34px));
-      gap: 2px;
+      gap: 3px;
       background: #CBD5E0;
-      padding: 4px;
+      padding: 5px;
       border-radius: 10px;
       border: 2px solid var(--primary-blue);
       touch-action: none;
-    }
-
-    @media (max-width: 480px) {
-      .ws-grid {
-        grid-template-columns: repeat(15, minmax(19px, 1fr));
-        gap: 1.5px;
-        padding: 3px;
-      }
     }
 
     .ws-cell {
@@ -413,16 +420,16 @@
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 0.88rem;
+      font-size: 0.95rem;
       color: var(--dark-blue);
-      border-radius: 4px;
+      border-radius: 5px;
       cursor: pointer;
       transition: background 0.1s, color 0.1s;
     }
 
     @media (max-width: 480px) {
       .ws-cell {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
       }
     }
 
@@ -765,6 +772,30 @@
       margin-bottom: 18px;
     }
 
+    .bank-card {
+      background: var(--off-white);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .bank-card.active-bank {
+      border-color: var(--success);
+      background: var(--success-bg);
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: #E2E8F0;
+      color: var(--text-dark);
+    }
+
     .status-pill {
       display: inline-block;
       padding: 4px 12px;
@@ -784,6 +815,29 @@
       background: var(--danger-bg);
       color: var(--danger);
       border: 1px solid #FCA5A5;
+    }
+
+    /* Modal for Editing Question */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 22px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .footer-bar {
@@ -889,7 +943,7 @@
 
       <div class="quiz-footer">
         <button type="button" class="btn-danger-outline" onclick="restartWithNewQuestions()">
-          ↻ Restart (20 New Questions)
+          ↻ Restart (New Questions)
         </button>
         <button type="button" class="btn btn-primary" id="nextBtn" style="width: auto; padding: 12px 24px;" onclick="handleNextQuestion()" disabled>
           Next Question →
@@ -1078,7 +1132,7 @@
     <section class="card hidden" id="viewAdminLogin">
       <h2 class="form-title">Admin Portal Login</h2>
       <p class="form-subtitle">
-        Enter the Admin Access PIN to manage the Word Puzzle round, add quiz questions, upload Word (.docx) files, or view leaderboards.
+        Enter the Admin Access PIN to manage Quiz Sets/Banks, Word Puzzle modes, or view leaderboards.
       </p>
 
       <form onsubmit="handleAdminLogin(event)">
@@ -1106,15 +1160,76 @@
 
       <!-- Admin Sub-Tabs -->
       <div class="admin-subtabs">
-        <button class="admin-subtab active" id="subtabWsControl" onclick="switchAdminSubtab('wsControl')">Word Puzzle Control</button>
+        <button class="admin-subtab active" id="subtabQuizControl" onclick="switchAdminSubtab('quizControl')">Quiz Control & Sets</button>
+        <button class="admin-subtab" id="subtabWsControl" onclick="switchAdminSubtab('wsControl')">Word Puzzle Control</button>
         <button class="admin-subtab" id="subtabAddSingle" onclick="switchAdminSubtab('single')">+ Quiz Question</button>
-        <button class="admin-subtab" id="subtabUploadDocx" onclick="switchAdminSubtab('docx')">Upload .docx</button>
-        <button class="admin-subtab" id="subtabManageQ" onclick="switchAdminSubtab('manageQ')">Questions (<span id="totalQCount">0</span>)</button>
+        <button class="admin-subtab" id="subtabManageQ" onclick="switchAdminSubtab('manageQ')">All Questions (<span id="totalQCount">0</span>)</button>
         <button class="admin-subtab" id="subtabFullLb" onclick="switchAdminSubtab('fullLb')">Leaderboards</button>
       </div>
 
-      <!-- ADMIN PANEL 0: WORD PUZZLE LIVE CONTROL & WORD SELECTION -->
-      <div id="adminPanelWsControl">
+      <!-- ADMIN PANEL 1: QUIZ LIVE CONTROL & 3 DOCUMENT SETS -->
+      <div id="adminPanelQuizControl">
+        <div class="ws-control-card">
+          <strong style="color: var(--dark-blue); font-size: 1rem;">Active Live Quiz Set (Hidden from Players):</strong>
+          <p style="font-size: 0.84rem; color: var(--text-dark); margin: 6px 0 12px; line-height: 1.4;">
+            Choose which Question Set goes live when players start the quiz. Players will never see the difficulty or set label—only the questions!
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="quizBankSelectorButtons">
+            <button type="button" class="btn btn-primary" style="flex:1; min-width:130px;" id="btnActivateBank1" onclick="setActiveQuizBank(1)">Set 1 (Easy)</button>
+            <button type="button" class="btn btn-primary" style="flex:1; min-width:130px;" id="btnActivateBank2" onclick="setActiveQuizBank(2)">Set 2 (Medium)</button>
+            <button type="button" class="btn btn-primary" style="flex:1; min-width:130px;" id="btnActivateBank3" onclick="setActiveQuizBank(3)">Set 3 (Hard)</button>
+            <button type="button" class="btn btn-secondary" style="flex:1; min-width:130px; margin-top:0;" id="btnActivateBank0" onclick="setActiveQuizBank(0)">Mix All Sets</button>
+          </div>
+          <p id="currentActiveQuizBankMsg" style="margin-top: 10px; font-weight: 700; font-size: 0.86rem; color: var(--success);"></p>
+        </div>
+
+        <h3 style="font-size: 1rem; color: var(--dark-blue); margin-bottom: 8px;">Upload Word (.docx) Files into Your 3 Question Sets</h3>
+        <div class="format-guide">
+          <strong>Format for each .docx file:</strong> Numbered question followed by options A, B, C, D with an asterisk <strong>*</strong> on the correct option (or put the correct answer first as A).
+          <pre>1. Who launched the blessed scheme of Waqf-e-Nau?
+A. Hazrat Mirza Tahir Ahmad (rh) *
+B. Hazrat Mirza Masroor Ahmad (aba)
+C. Hazrat Mirza Nasir Ahmad (rh)
+D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
+        </div>
+
+        <!-- 3 Upload Slots for the 3 Sets -->
+        <div class="bank-card" id="bankCard1">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:var(--dark-blue);">📁 Set 1 (e.g., Easy / Kids / General)</strong>
+            <span class="badge-pill" id="countBank1">0 Questions</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input type="file" accept=".docx" onchange="handleBankDocxUpload(event, 1)" style="flex:1; font-size:0.85rem;" />
+            <button type="button" class="btn-danger-outline" onclick="clearQuizBank(1)">Clear Set 1</button>
+          </div>
+        </div>
+
+        <div class="bank-card" id="bankCard2">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:var(--dark-blue);">📁 Set 2 (e.g., Medium / Youth)</strong>
+            <span class="badge-pill" id="countBank2">0 Questions</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input type="file" accept=".docx" onchange="handleBankDocxUpload(event, 2)" style="flex:1; font-size:0.85rem;" />
+            <button type="button" class="btn-danger-outline" onclick="clearQuizBank(2)">Clear Set 2</button>
+          </div>
+        </div>
+
+        <div class="bank-card" id="bankCard3">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:var(--dark-blue);">📁 Set 3 (e.g., Hard / Scholars)</strong>
+            <span class="badge-pill" id="countBank3">0 Questions</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input type="file" accept=".docx" onchange="handleBankDocxUpload(event, 3)" style="flex:1; font-size:0.85rem;" />
+            <button type="button" class="btn-danger-outline" onclick="clearQuizBank(3)">Clear Set 3</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PANEL 2: WORD PUZZLE LIVE CONTROL, GRID MODES & CUSTOM WORD COUNT -->
+      <div id="adminPanelWsControl" class="hidden">
         <div class="ws-control-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
             <div>
@@ -1123,20 +1238,22 @@
             </div>
             <span id="adminWsRoundLabel" style="font-size: 0.82rem; font-weight: 700; color: var(--primary-blue);">Round #1</span>
           </div>
-          <p style="font-size: 0.85rem; color: var(--text-dark); margin-bottom: 14px; line-height: 1.45;">
-            Select the word count (10, 15, or 20 words), check/uncheck the specific words you want for this round, and click <strong>Open Portal & Start New Round</strong>!
-          </p>
 
-          <div class="form-group" style="margin-bottom: 14px;">
-            <label for="adminWordCountSelect"><strong>1. Select Number of Words for this Round:</strong></label>
-            <select id="adminWordCountSelect" onchange="onAdminWordCountChanged()">
-              <option value="10">10 Words</option>
-              <option value="15">15 Words</option>
-              <option value="20" selected>20 Words (Default)</option>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="adminGridModeSelect"><strong>1. Select Puzzle Board Difficulty / Grid Size Mode:</strong></label>
+            <select id="adminGridModeSelect" onchange="renderAdminWordChecklist()">
+              <option value="10">Mode 1: Easy — Small Board (10 × 10 Grid, max 10-letter words)</option>
+              <option value="12">Mode 2: Medium — Standard Board (12 × 12 Grid, max 12-letter words)</option>
+              <option value="15" selected>Mode 3: Hard — Large Board (15 × 15 Grid, up to 13-letter words)</option>
             </select>
           </div>
 
-          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="adminCustomWordCountInput"><strong>2. Type Number of Words for this Round (Editable):</strong></label>
+            <input type="number" id="adminCustomWordCountInput" min="1" max="50" value="15" placeholder="Type any number e.g. 8, 12, 16, 20" />
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 6px;">
             <button type="button" class="btn btn-success" style="flex: 1; min-width: 180px;" id="btnOpenWsRound" onclick="adminOpenNewWordSearchRound()">
               🟢 Open Portal & Start New Round
             </button>
@@ -1148,15 +1265,15 @@
 
         <!-- Word Selection Checklist Container -->
         <div style="margin-bottom: 18px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <strong style="font-size: 0.92rem; color: var(--dark-blue);">2. Select Specific Words for Current Round (<span id="selectedWordsCountBadge">0</span> Selected):</strong>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+            <strong style="font-size: 0.92rem; color: var(--dark-blue);">3. Select Specific Words for Current Round (<span id="selectedWordsCountBadge">0</span> Selected):</strong>
             <div style="display: flex; gap: 6px;">
-              <button type="button" class="lb-refresh-btn" onclick="adminSelectAllWords(true)">Select All</button>
+              <button type="button" class="lb-refresh-btn" onclick="adminSelectAllWords(true)">Select All Valid</button>
               <button type="button" class="lb-refresh-btn" onclick="adminSelectAllWords(false)">Deselect All</button>
             </div>
           </div>
           <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;">
-            Check the exact words you wish to include in the puzzle grid. (The system will automatically pick up to your chosen word count).
+            Only words that fit inside your chosen grid size are enabled. Check the exact words you want included in the round.
           </p>
           <div id="adminWordChecklistGrid" style="max-height: 220px; overflow-y: auto; background: var(--off-white); padding: 12px; border-radius: 10px; border: 1px solid #E2E8F0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;"></div>
         </div>
@@ -1171,9 +1288,17 @@
         </form>
       </div>
 
-      <!-- ADMIN PANEL A: ADD SINGLE QUESTION -->
+      <!-- ADMIN PANEL 3: ADD SINGLE QUESTION -->
       <div id="adminPanelSingle" class="hidden">
         <form onsubmit="handleAddSingleQuestion(event)">
+          <div class="form-group">
+            <label>Assign to Question Set *</label>
+            <select id="newQBankSelect">
+              <option value="1">Set 1 (Easy)</option>
+              <option value="2">Set 2 (Medium)</option>
+              <option value="3">Set 3 (Hard)</option>
+            </select>
+          </div>
           <div class="form-group">
             <label>Question Text *</label>
             <textarea id="newQText" rows="2" placeholder="Type your question here..." required></textarea>
@@ -1198,47 +1323,23 @@
         </form>
       </div>
 
-      <!-- ADMIN PANEL B: UPLOAD WORD (.DOCX) FILE -->
-      <div id="adminPanelDocx" class="hidden">
-        <div class="format-guide">
-          <strong>How to format your Word (.docx) file:</strong><br/>
-          Write each question followed by 4 options (A, B, C, D). Put an asterisk <strong>*</strong> at the end of the <strong>correct option</strong> (or leave out the * and always list the correct answer as Option A).
-          <pre>1. Who launched the blessed scheme of Waqf-e-Nau?
-A. Hazrat Mirza Tahir Ahmad (rh) *
-B. Hazrat Mirza Masroor Ahmad (aba)
-C. Hazrat Mirza Nasir Ahmad (rh)
-D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)
-
-2. In which year was the Waqf-e-Nau scheme launched?
-A. 1989
-B. 1987 *
-C. 1985
-D. 1992</pre>
-        </div>
-
-        <div class="form-group">
-          <label for="docxFileInput">Select Microsoft Word / WPS File (.docx) *</label>
-          <input type="file" id="docxFileInput" accept=".docx" onchange="handleDocxFileSelected(event)" />
-        </div>
-
-        <div id="docxPreviewArea" class="hidden" style="margin-top: 16px;">
-          <p id="docxParseSummary" style="font-weight: 700; color: var(--primary-blue); margin-bottom: 10px;"></p>
-          <div id="docxPreviewList" style="max-height: 260px; overflow-y: auto; border: 1px solid #CBD5E0; border-radius: 10px; padding: 10px; margin-bottom: 14px; background: var(--off-white);"></div>
-          <button type="button" class="btn btn-success" id="confirmUploadDocxBtn" onclick="uploadParsedDocxQuestions()">
-            Upload All Questions to Live Quiz
-          </button>
-        </div>
-      </div>
-
-      <!-- ADMIN PANEL C: VIEW / DELETE QUESTIONS -->
+      <!-- ADMIN PANEL 4: VIEW / EDIT / DELETE ALL QUESTIONS -->
       <div id="adminPanelManageQ" class="hidden">
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
-          Showing all active questions in the quiz pool. Every player receives 20 random questions from this pool.
-        </p>
-        <div id="adminQuestionsList" style="max-height: 420px; overflow-y: auto;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Every question (including starter questions) can be edited or removed.
+          </p>
+          <select id="filterAdminQBank" onchange="renderAdminQuestionsList()" style="padding:6px 10px; border-radius:8px; border:1px solid var(--border-color); font-size:0.84rem;">
+            <option value="all">Show All Sets</option>
+            <option value="1">Set 1 (Easy)</option>
+            <option value="2">Set 2 (Medium)</option>
+            <option value="3">Set 3 (Hard)</option>
+          </select>
+        </div>
+        <div id="adminQuestionsList" style="max-height: 440px; overflow-y: auto;"></div>
       </div>
 
-      <!-- ADMIN PANEL D: FULL LEADERBOARDS & RESET -->
+      <!-- ADMIN PANEL 5: FULL LEADERBOARDS & RESET -->
       <div id="adminPanelFullLb" class="hidden">
         <div style="margin-bottom: 22px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -1258,6 +1359,48 @@ D. 1992</pre>
       </div>
     </section>
 
+    <!-- EDIT QUESTION MODAL -->
+    <div id="editQuestionModal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <h3 class="form-title" style="margin-bottom: 12px;">Edit Question</h3>
+        <form onsubmit="saveEditedQuestion(event)">
+          <input type="hidden" id="editQId" />
+          <div class="form-group">
+            <label>Question Set *</label>
+            <select id="editQBank">
+              <option value="1">Set 1 (Easy)</option>
+              <option value="2">Set 2 (Medium)</option>
+              <option value="3">Set 3 (Hard)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Question Text *</label>
+            <textarea id="editQText" rows="2" required></textarea>
+          </div>
+          <div class="form-group">
+            <label style="color: var(--success);">Correct Answer *</label>
+            <input type="text" id="editQOpt0" required />
+          </div>
+          <div class="form-group">
+            <label>Wrong Option 2 *</label>
+            <input type="text" id="editQOpt1" required />
+          </div>
+          <div class="form-group">
+            <label>Wrong Option 3 *</label>
+            <input type="text" id="editQOpt2" required />
+          </div>
+          <div class="form-group">
+            <label>Wrong Option 4 *</label>
+            <input type="text" id="editQOpt3" required />
+          </div>
+          <div style="display:flex; gap:10px; margin-top:14px;">
+            <button type="submit" class="btn btn-primary" id="saveEditQBtn">Save Changes</button>
+            <button type="button" class="btn btn-secondary" style="margin-top:0;" onclick="closeEditQuestionModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Footer with Discreet Admin Button -->
     <div class="footer-bar">
       <div class="mode-banner" id="connectionModeBanner"></div>
@@ -1272,7 +1415,7 @@ D. 1992</pre>
     const SUPABASE_URL = "https://bwnnmsicsclwekpkyuez.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_BCNISL4k2zwKbhSfCjKQUg_o83RyeNz";
 
-    const ADMIN_ACCESS_PIN = "Jalsa 2026"; // Admin password with space
+    const ADMIN_ACCESS_PIN = "Jalsa 2026";
 
     let supabaseClient = null;
     const isSupabaseConfigured =
@@ -1288,11 +1431,10 @@ D. 1992</pre>
     }
 
     // =========================================================================
-    // 2. BUILT-IN QUESTION BANK & WORD PUZZLE BANK
+    // 2. STARTER QUESTIONS (AUTO-SEEDED TO DB SO ALL CAN BE EDITED/DELETED)
     // =========================================================================
-    const STARTER_QUESTIONS = [
+    const INITIAL_SEED_QUESTIONS = [
       {
-        id: "starter_1",
         q: "Who launched the blessed scheme of Waqf-e-Nau?",
         options: [
           "Hazrat Mirza Tahir Ahmad (rh)",
@@ -1300,28 +1442,28 @@ D. 1992</pre>
           "Hazrat Mirza Nasir Ahmad (rh)",
           "Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)"
         ],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_2",
         q: "In which year was the Waqf-e-Nau scheme launched?",
         options: ["1987", "1989", "1985", "1992"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_3",
         q: "What does the Arabic term 'Waqf-e-Nau' literally mean?",
         options: ["New Dedication", "Sacred Promise", "Servants of Peace", "Youth of Islam"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_4",
         q: "When are children dedicated under the Waqf-e-Nau scheme?",
         options: ["Before they are born", "At age 7", "At age 15", "Upon graduating university"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_5",
         q: "What is the primary purpose of a Waqif-e-Nau?",
         options: [
           "To dedicate their life to the service of Islam, the Jama'at, and humanity",
@@ -1329,10 +1471,10 @@ D. 1992</pre>
           "To travel around the world",
           "To run a private business"
         ],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_6",
         q: "Who is the current Worldwide Head (Khalifatul Masih V) of the Ahmadiyya Muslim Community?",
         options: [
           "Hazrat Mirza Masroor Ahmad (aba)",
@@ -1340,40 +1482,40 @@ D. 1992</pre>
           "Hazrat Hakim Maulvi Nur-ud-Din (ra)",
           "Hazrat Mirza Ghulam Ahmad (as)"
         ],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_7",
         q: "In which year did Hazrat Mirza Masroor Ahmad (aba) serve in Ghana before his Khilafat?",
         options: ["1977 to 1985", "1990 to 1995", "1965 to 1970", "2000 to 2003"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_8",
         q: "What is the famous motto of the Ahmadiyya Muslim Community?",
         options: ["Love for All, Hatred for None", "Peace Through Justice", "Faith, Unity, Discipline", "Service Before Self"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_9",
         q: "In which year was the Ahmadiyya Muslim Community founded?",
         options: ["1889", "1901", "1835", "1908"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_10",
         q: "Where was the Promised Messiah, Hazrat Mirza Ghulam Ahmad (as), born?",
         options: ["Qadian, India", "Rabwah, Pakistan", "Lahore, Pakistan", "Delhi, India"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_11",
         q: "What does 'Jalsa Salana' mean?",
         options: ["Annual Gathering", "Festival of Sacrifice", "Day of Unity", "Peace Conference"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_12",
         q: "Who started the first Jalsa Salana in 1891?",
         options: [
           "Hazrat Mirza Ghulam Ahmad (as)",
@@ -1381,58 +1523,58 @@ D. 1992</pre>
           "Hazrat Khalifatul Masih II (ra)",
           "Hazrat Khalifatul Masih III (rh)"
         ],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_13",
         q: "What is the first Surah (chapter) of the Holy Qur'an?",
         options: ["Surah Al-Fatihah", "Surah Al-Baqarah", "Surah Al-Ikhlas", "Surah An-Nas"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_14",
         q: "How many Surahs (chapters) are there in the Holy Qur'an?",
         options: ["114", "110", "120", "99"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_15",
         q: "Which magazine is published specifically for Waqifeen-e-Nau?",
         options: ["Ismail & Maryam", "The Review of Religions", "Al-Fazl", "Tariq"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_16",
         q: "Which auxiliary organization is for Ahmadi Muslim boys aged 7 to 15?",
         options: ["Majlis Atfal-ul-Ahmadiyya", "Majlis Khuddam-ul-Ahmadiyya", "Majlis Ansarullah", "Lajna Ima'illah"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_17",
         q: "Which auxiliary organization is for Ahmadi Muslim men aged 15 to 40?",
         options: ["Majlis Khuddam-ul-Ahmadiyya", "Majlis Ansarullah", "Majlis Atfal-ul-Ahmadiyya", "Nasirat-ul-Ahmadiyya"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_18",
         q: "Which auxiliary organization is for Ahmadi Muslim women aged 15 and above?",
         options: ["Lajna Ima'illah", "Nasirat-ul-Ahmadiyya", "Majlis Ansarullah", "Waqf-e-Arzi"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_19",
         q: "How many daily obligatory prayers (Salat) are prescribed in Islam?",
         options: ["5", "3", "7", "4"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_20",
         q: "In which city was the Holy Prophet Muhammad (sa) born?",
         options: ["Makkah", "Madinah", "Jerusalem", "Ta'if"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_21",
         q: "What is the name of the first Khalifa of the Ahmadiyya Muslim Community?",
         options: [
           "Hazrat Hakim Maulvi Nur-ud-Din (ra)",
@@ -1440,16 +1582,16 @@ D. 1992</pre>
           "Hazrat Mirza Nasir Ahmad (rh)",
           "Hazrat Mirza Tahir Ahmad (rh)"
         ],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_22",
         q: "Which project of the Ahmadiyya Muslim Community provides clean water, schools, and hospitals in Africa?",
         options: ["MTA International", "Nusrat Jehan Scheme", "Waqf-e-Jadid", "Tehrik-e-Jadid"],
-        answer: 1
+        answer: 1,
+        bank: 1
       },
       {
-        id: "starter_23",
         q: "Which agricultural innovation did Hazrat Mirza Masroor Ahmad (aba) successfully pioneer while serving in Ghana?",
         options: [
           "Growing wheat in Ghana for the first time",
@@ -1457,19 +1599,20 @@ D. 1992</pre>
           "Building the Akosombo Dam",
           "Planting rubber trees in Accra"
         ],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_24",
         q: "What are the official colors of Waqf-e-Nau?",
         options: ["Blue and White", "Green and Gold", "Black and White", "Red and White"],
-        answer: 0
+        answer: 0,
+        bank: 1
       },
       {
-        id: "starter_25",
         q: "What is the name of the global satellite television network of the Ahmadiyya Muslim Community?",
         options: ["MTA International", "Peace TV", "Al-Islam TV", "Qadian Broadcasting"],
-        answer: 0
+        answer: 0,
+        bank: 1
       }
     ];
 
@@ -1490,27 +1633,96 @@ D. 1992</pre>
       "DEVOTION"
     ];
 
-    let allQuestionsPool = [...STARTER_QUESTIONS];
+    let allQuestionsPool = [];
+    let activeQuizBank = 1; // 1, 2, 3, or 0 (all)
     let allPuzzleWordsPool = [...STARTER_PUZZLE_WORDS];
 
     async function syncQuestionBank() {
-      if (!supabaseClient) return;
-      const { data, error } = await supabaseClient
+      if (!supabaseClient) {
+        allQuestionsPool = INITIAL_SEED_QUESTIONS.map((item, idx) => ({
+          id: "local_" + idx,
+          q: item.q,
+          options: item.options,
+          answer: item.answer,
+          bank: item.bank
+        }));
+        updateBankCountsUI();
+        return;
+      }
+
+      // Sync active quiz bank setting
+      const { data: stateData } = await supabaseClient
+        .from("quiz_state")
+        .select("*")
+        .eq("id", 1)
+        .single();
+
+      if (stateData && typeof stateData.active_bank === "number") {
+        activeQuizBank = stateData.active_bank;
+      }
+
+      // Fetch questions
+      let { data, error } = await supabaseClient
         .from("questions")
         .select("*")
         .order("id", { ascending: false });
 
+      // If database is completely empty and hasn't been seeded yet, seed initial starter questions so admin can edit/delete them!
+      if (!error && data && data.length === 0 && !localStorage.getItem("wn_seeded_v1")) {
+        const rowsToInsert = INITIAL_SEED_QUESTIONS.map((item) => ({
+          question_text: item.q,
+          options: item.options,
+          correct_index: item.answer,
+          bank_number: item.bank
+        }));
+        await supabaseClient.from("questions").insert(rowsToInsert);
+        localStorage.setItem("wn_seeded_v1", "true");
+
+        const res = await supabaseClient
+          .from("questions")
+          .select("*")
+          .order("id", { ascending: false });
+        data = res.data || [];
+      }
+
       if (!error && data) {
-        const dbQuestions = data.map((row) => ({
+        allQuestionsPool = data.map((row) => ({
           id: row.id,
           q: row.question_text,
           options: row.options,
           answer: row.correct_index,
-          isFromDb: true
+          bank: row.bank_number || 1
         }));
-        allQuestionsPool = [...dbQuestions, ...STARTER_QUESTIONS];
       }
+
       document.getElementById("totalQCount").textContent = allQuestionsPool.length;
+      updateBankCountsUI();
+    }
+
+    function updateBankCountsUI() {
+      const b1 = allQuestionsPool.filter((q) => q.bank === 1).length;
+      const b2 = allQuestionsPool.filter((q) => q.bank === 2).length;
+      const b3 = allQuestionsPool.filter((q) => q.bank === 3).length;
+
+      document.getElementById("countBank1").textContent = `${b1} Questions`;
+      document.getElementById("countBank2").textContent = `${b2} Questions`;
+      document.getElementById("countBank3").textContent = `${b3} Questions`;
+
+      ["bankCard1", "bankCard2", "bankCard3"].forEach((id) =>
+        document.getElementById(id).classList.remove("active-bank")
+      );
+      if (activeQuizBank === 1) document.getElementById("bankCard1").classList.add("active-bank");
+      if (activeQuizBank === 2) document.getElementById("bankCard2").classList.add("active-bank");
+      if (activeQuizBank === 3) document.getElementById("bankCard3").classList.add("active-bank");
+
+      const labels = {
+        1: "Set 1 (Easy)",
+        2: "Set 2 (Medium)",
+        3: "Set 3 (Hard)",
+        0: "All Sets Mixed"
+      };
+      document.getElementById("currentActiveQuizBankMsg").textContent =
+        `✓ Currently Live for Players: ${labels[activeQuizBank] || "Set 1"}`;
     }
 
     async function syncPuzzleWordsBank() {
@@ -1634,8 +1846,24 @@ D. 1992</pre>
     }
 
     function beginFreshQuizSession() {
-      const count = Math.min(QUESTIONS_PER_QUIZ, allQuestionsPool.length);
-      const picked = shuffleArray(allQuestionsPool).slice(0, count);
+      // Filter by activeQuizBank (1, 2, 3) unless activeQuizBank === 0
+      let pool =
+        activeQuizBank === 0
+          ? allQuestionsPool
+          : allQuestionsPool.filter((q) => q.bank === activeQuizBank);
+
+      // Fallback if selected set has 0 questions
+      if (pool.length === 0) {
+        pool = allQuestionsPool;
+      }
+
+      if (pool.length === 0) {
+        alert("No quiz questions are currently loaded. Please ask the Admin to add questions.");
+        return;
+      }
+
+      const count = Math.min(QUESTIONS_PER_QUIZ, pool.length);
+      const picked = shuffleArray(pool).slice(0, count);
 
       activeQuestions = picked.map((item) => {
         const correctText = item.options[item.answer];
@@ -1661,7 +1889,7 @@ D. 1992</pre>
     }
 
     function restartWithNewQuestions() {
-      if (confirm("Restart now? You will get 20 completely new random questions and your timer will reset.")) {
+      if (confirm("Restart now? You will get new random questions and your timer will reset.")) {
         stopTimer();
         beginFreshQuizSession();
       }
@@ -1867,14 +2095,15 @@ D. 1992</pre>
     }
 
     // =========================================================================
-    // 5. MODE 2: ADMIN-CONTROLLED WORD SEARCH PUZZLE (15x15 GRID)
+    // 5. MODE 2: ADMIN-CONTROLLED WORD SEARCH PUZZLE (DYNAMIC GRID SIZE)
     // =========================================================================
-    const GRID_SIZE = 15;
+    let currentGridSize = 15;
     let wsPortalState = {
       is_open: false,
       round_number: 1,
       active_words: [],
-      word_count: 20
+      word_count: 15,
+      grid_size: 15
     };
 
     let wsUser = { fullName: "", email: "", profession: "" };
@@ -1900,6 +2129,7 @@ D. 1992</pre>
 
       if (!error && data) {
         wsPortalState = data;
+        currentGridSize = data.grid_size || 15;
       }
 
       const closedPanel = document.getElementById("wsClosedPanel");
@@ -1910,7 +2140,7 @@ D. 1992</pre>
         openPanel.classList.remove("hidden");
         const count = wsPortalState.active_words.length;
         document.getElementById("wsLobbySubtitle").innerHTML =
-          `Find all <strong>${count} hidden Islamic & Ahmadiyya words</strong> inside the letter grid in the shortest time!`;
+          `Find all <strong>${count} hidden Islamic & Ahmadiyya words</strong> inside the <strong>${currentGridSize}×${currentGridSize}</strong> letter grid in the shortest time!`;
       } else {
         openPanel.classList.add("hidden");
         closedPanel.classList.remove("hidden");
@@ -1940,25 +2170,30 @@ D. 1992</pre>
         return;
       }
 
-      wsTargetWords = wsPortalState.active_words.map((w) => w.toUpperCase());
+      currentGridSize = wsPortalState.grid_size || 15;
+      wsTargetWords = wsPortalState.active_words
+        .map((w) => w.toUpperCase())
+        .filter((w) => w.length <= currentGridSize);
+
       wsFoundWords = new Set();
       wsFoundCells = new Set();
       wsTapStartCell = null;
       wsActive = true;
       wsCompleted = false;
 
-      document.getElementById("wsTargetWordsHeader").textContent = `Search for these ${wsTargetWords.length} hidden words:`;
+      document.getElementById("wsTargetWordsHeader").textContent =
+        `Search for these ${wsTargetWords.length} hidden words (${currentGridSize}×${currentGridSize} Board):`;
 
-      buildWordSearchGrid(wsTargetWords);
-      renderWordSearchBoard();
+      buildWordSearchGrid(wsTargetWords, currentGridSize);
+      renderWordSearchBoard(currentGridSize);
 
       hideAllViews();
       document.getElementById("viewWsBoard").classList.remove("hidden");
       startWsTimer();
     }
 
-    function buildWordSearchGrid(words) {
-      wsGrid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(""));
+    function buildWordSearchGrid(words, gridSize) {
+      wsGrid = Array.from({ length: gridSize }, () => Array(gridSize).fill(""));
       const directions = [
         [0, 1],   // Horizontal Right
         [1, 0],   // Vertical Down
@@ -1969,18 +2204,19 @@ D. 1992</pre>
       ];
 
       const sortedWords = [...words].sort((a, b) => b.length - a.length);
+      const successfullyPlaced = [];
 
       sortedWords.forEach((word) => {
         let placed = false;
-        for (let attempt = 0; attempt < 250 && !placed; attempt++) {
+        for (let attempt = 0; attempt < 350 && !placed; attempt++) {
           const dir = directions[Math.floor(Math.random() * directions.length)];
-          const startR = Math.floor(Math.random() * GRID_SIZE);
-          const startC = Math.floor(Math.random() * GRID_SIZE);
+          const startR = Math.floor(Math.random() * gridSize);
+          const startC = Math.floor(Math.random() * gridSize);
 
           const endR = startR + dir[0] * (word.length - 1);
           const endC = startC + dir[1] * (word.length - 1);
 
-          if (endR < 0 || endR >= GRID_SIZE || endC < 0 || endC >= GRID_SIZE) continue;
+          if (endR < 0 || endR >= gridSize || endC < 0 || endC >= gridSize) continue;
 
           let fits = true;
           for (let i = 0; i < word.length; i++) {
@@ -2000,13 +2236,17 @@ D. 1992</pre>
               wsGrid[r][c] = word[i];
             }
             placed = true;
+            successfullyPlaced.push(word);
           }
         }
       });
 
+      // Keep only words that physically fit in the grid so puzzle is 100% solvable
+      wsTargetWords = successfullyPlaced;
+
       const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      for (let r = 0; r < GRID_SIZE; r++) {
-        for (let c = 0; c < GRID_SIZE; c++) {
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
           if (wsGrid[r][c] === "") {
             wsGrid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)];
           }
@@ -2014,12 +2254,16 @@ D. 1992</pre>
       }
     }
 
-    function renderWordSearchBoard() {
+    function renderWordSearchBoard(gridSize) {
       const gridEl = document.getElementById("wsGridContainer");
       gridEl.innerHTML = "";
 
-      for (let r = 0; r < GRID_SIZE; r++) {
-        for (let c = 0; c < GRID_SIZE; c++) {
+      // Adjust cell sizing dynamically based on grid size (10, 12, or 15)
+      const cellMaxPx = gridSize === 10 ? 44 : gridSize === 12 ? 38 : 34;
+      gridEl.style.gridTemplateColumns = `repeat(${gridSize}, minmax(22px, ${cellMaxPx}px))`;
+
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
           const cell = document.createElement("div");
           cell.className = "ws-cell";
           cell.dataset.r = r;
@@ -2215,7 +2459,7 @@ D. 1992</pre>
 
         if (error) {
           console.error(error);
-          statusMsg.textContent = "Error saving score. Make sure you ran the Word Search SQL in Supabase.";
+          statusMsg.textContent = "Error saving score. Check Supabase permissions.";
         } else {
           statusMsg.textContent = "✓ Your completion time is live on the Word Puzzle Top 10!";
         }
@@ -2263,10 +2507,9 @@ D. 1992</pre>
     }
 
     // =========================================================================
-    // 6. ADMIN PORTAL LOGIC & WORD SELECTION
+    // 6. ADMIN PORTAL LOGIC: 3 QUIZ SETS, EDITABLE QUESTIONS, PUZZLE MODES
     // =========================================================================
     let isAdminLoggedIn = false;
-    let parsedDocxQuestions = [];
 
     function openAdminPortal() {
       stopTimer();
@@ -2312,27 +2555,28 @@ D. 1992</pre>
       document.getElementById("viewAdminDashboard").classList.remove("hidden");
       await syncQuestionBank();
       await syncPuzzleWordsBank();
-      switchAdminSubtab("wsControl");
+      switchAdminSubtab("quizControl");
     }
 
     function switchAdminSubtab(subtab) {
-      ["subtabWsControl", "subtabAddSingle", "subtabUploadDocx", "subtabManageQ", "subtabFullLb"].forEach((id) =>
+      ["subtabQuizControl", "subtabWsControl", "subtabAddSingle", "subtabManageQ", "subtabFullLb"].forEach((id) =>
         document.getElementById(id).classList.remove("active")
       );
-      ["adminPanelWsControl", "adminPanelSingle", "adminPanelDocx", "adminPanelManageQ", "adminPanelFullLb"].forEach((id) =>
+      ["adminPanelQuizControl", "adminPanelWsControl", "adminPanelSingle", "adminPanelManageQ", "adminPanelFullLb"].forEach((id) =>
         document.getElementById(id).classList.add("hidden")
       );
 
-      if (subtab === "wsControl") {
+      if (subtab === "quizControl") {
+        document.getElementById("subtabQuizControl").classList.add("active");
+        document.getElementById("adminPanelQuizControl").classList.remove("hidden");
+        updateBankCountsUI();
+      } else if (subtab === "wsControl") {
         document.getElementById("subtabWsControl").classList.add("active");
         document.getElementById("adminPanelWsControl").classList.remove("hidden");
         refreshAdminWsControlPanel();
       } else if (subtab === "single") {
         document.getElementById("subtabAddSingle").classList.add("active");
         document.getElementById("adminPanelSingle").classList.remove("hidden");
-      } else if (subtab === "docx") {
-        document.getElementById("subtabUploadDocx").classList.add("active");
-        document.getElementById("adminPanelDocx").classList.remove("hidden");
       } else if (subtab === "manageQ") {
         document.getElementById("subtabManageQ").classList.add("active");
         document.getElementById("adminPanelManageQ").classList.remove("hidden");
@@ -2344,7 +2588,123 @@ D. 1992</pre>
       }
     }
 
-    // Word Puzzle Admin Controls & Checklist
+    // Set Active Quiz Set (1, 2, 3, or 0)
+    async function setActiveQuizBank(bankNum) {
+      activeQuizBank = bankNum;
+      if (supabaseClient) {
+        const { error } = await supabaseClient
+          .from("quiz_state")
+          .upsert({ id: 1, active_bank: bankNum, updated_at: new Date().toISOString() });
+
+        if (error) {
+          alert("Error updating live quiz set. Make sure you ran the updated SQL schema in Supabase.");
+          console.error(error);
+          return;
+        }
+      }
+      updateBankCountsUI();
+    }
+
+    // Upload .docx into Set 1, 2, or 3
+    function handleBankDocxUpload(event, bankNum) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (loadEvent) {
+        mammoth
+          .extractRawText({ arrayBuffer: loadEvent.target.result })
+          .then(async function (result) {
+            const parsed = parseQuestionsFromText(result.value, bankNum);
+            if (parsed.length === 0) {
+              alert("No valid questions found in this .docx file. Please check the formatting guide.");
+              return;
+            }
+            if (!confirm(`Found ${parsed.length} questions in "${file.name}". Upload them into Set ${bankNum}?`)) {
+              return;
+            }
+            if (supabaseClient) {
+              const { error } = await supabaseClient.from("questions").insert(parsed);
+              if (error) {
+                alert("Error uploading questions to Supabase.");
+                console.error(error);
+              } else {
+                alert(`Success! Added ${parsed.length} questions to Set ${bankNum}!`);
+                event.target.value = "";
+                await syncQuestionBank();
+              }
+            }
+          })
+          .catch(function (err) {
+            alert("Could not read this .docx file.");
+            console.error(err);
+          });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function clearQuizBank(bankNum) {
+      if (!confirm(`Are you sure you want to delete ALL questions inside Set ${bankNum}?`)) return;
+      if (supabaseClient) {
+        await supabaseClient.from("questions").delete().eq("bank_number", bankNum);
+        await syncQuestionBank();
+      }
+    }
+
+    function parseQuestionsFromText(rawText, bankNum) {
+      const lines = rawText
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
+
+      const extracted = [];
+      let currentQ = null;
+      let currentOpts = [];
+      let correctIdx = 0;
+
+      const optionRegex = /^([A-Da-d])[\.\)\:\-]\s*(.+)$/;
+
+      lines.forEach((line) => {
+        const optMatch = line.match(optionRegex);
+        if (optMatch && currentQ) {
+          let optText = optMatch[2].trim();
+          if (optText.endsWith("*")) {
+            optText = optText.slice(0, -1).trim();
+            correctIdx = currentOpts.length;
+          }
+          currentOpts.push(optText);
+
+          if (currentOpts.length === 4) {
+            extracted.push({
+              question_text: currentQ,
+              options: currentOpts,
+              correct_index: correctIdx,
+              bank_number: bankNum
+            });
+            currentQ = null;
+            currentOpts = [];
+            correctIdx = 0;
+          }
+        } else {
+          if (currentQ && currentOpts.length >= 2) {
+            while (currentOpts.length < 4) currentOpts.push("N/A");
+            extracted.push({
+              question_text: currentQ,
+              options: currentOpts.slice(0, 4),
+              correct_index: correctIdx,
+              bank_number: bankNum
+            });
+          }
+          currentQ = line.replace(/^(Q?\d+[\.\)\:\-]\s*)/i, "").trim();
+          currentOpts = [];
+          correctIdx = 0;
+        }
+      });
+
+      return extracted;
+    }
+
+    // Word Puzzle Admin Controls, 3 Grid Modes & Editable Word Count
     async function refreshAdminWsControlPanel() {
       await checkWordSearchPortalStatus(false);
       await syncPuzzleWordsBank();
@@ -2352,6 +2712,13 @@ D. 1992</pre>
       const badge = document.getElementById("adminWsStatusBadge");
       const roundLbl = document.getElementById("adminWsRoundLabel");
       roundLbl.textContent = `Round #${wsPortalState.round_number || 1}`;
+
+      if (wsPortalState.grid_size) {
+        document.getElementById("adminGridModeSelect").value = String(wsPortalState.grid_size);
+      }
+      if (wsPortalState.word_count) {
+        document.getElementById("adminCustomWordCountInput").value = wsPortalState.word_count;
+      }
 
       if (wsPortalState.is_open) {
         badge.textContent = "OPEN (LIVE)";
@@ -2368,27 +2735,31 @@ D. 1992</pre>
       const grid = document.getElementById("adminWordChecklistGrid");
       grid.innerHTML = "";
 
+      const maxWordLen = parseInt(document.getElementById("adminGridModeSelect").value, 10) || 15;
       const activeSet = new Set(wsPortalState.active_words || []);
-      const countSelect = parseInt(document.getElementById("adminWordCountSelect").value, 10) || 20;
+      const targetCount = parseInt(document.getElementById("adminCustomWordCountInput").value, 10) || 15;
 
-      // If active_words isn't set yet, pre-select first N words
-      const defaultCheck = activeSet.size > 0 ? activeSet : new Set(allPuzzleWordsPool.slice(0, countSelect));
+      const validPool = allPuzzleWordsPool.filter((w) => w.length <= maxWordLen);
+      const defaultCheck = activeSet.size > 0 ? activeSet : new Set(validPool.slice(0, targetCount));
 
       allPuzzleWordsPool.forEach((word) => {
-        const isChecked = defaultCheck.has(word);
+        const tooLong = word.length > maxWordLen;
+        const isChecked = !tooLong && defaultCheck.has(word);
+
         const label = document.createElement("label");
         label.style.display = "flex";
         label.style.alignItems = "center";
         label.style.gap = "6px";
-        label.style.fontSize = "0.82rem";
-        label.style.cursor = "pointer";
-        label.style.background = "var(--white)";
+        label.style.fontSize = "0.8rem";
+        label.style.cursor = tooLong ? "not-allowed" : "pointer";
+        label.style.background = tooLong ? "#EDF2F7" : "var(--white)";
+        label.style.opacity = tooLong ? "0.5" : "1";
         label.style.padding = "6px 8px";
         label.style.borderRadius = "6px";
         label.style.border = "1px solid #CBD5E0";
 
         label.innerHTML = `
-          <input type="checkbox" class="admin-word-chk" value="${word}" ${isChecked ? "checked" : ""} onchange="updateSelectedWordsCountBadge()" />
+          <input type="checkbox" class="admin-word-chk" value="${word}" ${isChecked ? "checked" : ""} ${tooLong ? "disabled" : ""} onchange="updateSelectedWordsCountBadge()" />
           <span style="font-weight: 700; color: var(--text-dark);">${word}</span>
         `;
         grid.appendChild(label);
@@ -2403,14 +2774,9 @@ D. 1992</pre>
     }
 
     function adminSelectAllWords(select) {
-      document.querySelectorAll(".admin-word-chk").forEach((chk) => {
+      document.querySelectorAll(".admin-word-chk:not(:disabled)").forEach((chk) => {
         chk.checked = select;
       });
-      updateSelectedWordsCountBadge();
-    }
-
-    function onAdminWordCountChanged() {
-      // Optional helper when word count dropdown changes
       updateSelectedWordsCountBadge();
     }
 
@@ -2418,10 +2784,16 @@ D. 1992</pre>
       if (!supabaseClient) return;
 
       const checkedBoxes = document.querySelectorAll(".admin-word-chk:checked");
-      const targetCount = parseInt(document.getElementById("adminWordCountSelect").value, 10) || 20;
+      const targetCount = parseInt(document.getElementById("adminCustomWordCountInput").value, 10);
+      const chosenGridSize = parseInt(document.getElementById("adminGridModeSelect").value, 10) || 15;
+
+      if (!targetCount || targetCount < 1) {
+        alert("Please type a valid number of words (at least 1).");
+        return;
+      }
 
       if (checkedBoxes.length < targetCount) {
-        alert(`You selected ${checkedBoxes.length} words, but your target word count is ${targetCount}. Please check more words or change the target count.`);
+        alert(`You selected ${checkedBoxes.length} words, which is less than your target count of ${targetCount}. Please check at least ${targetCount} words or lower the word count.`);
         return;
       }
 
@@ -2429,7 +2801,6 @@ D. 1992</pre>
       btn.disabled = true;
       btn.textContent = "Opening Live Round...";
 
-      // Gather checked words
       const selectedWords = Array.from(checkedBoxes).map((chk) => chk.value);
       const finalWordsForRound = shuffleArray(selectedWords).slice(0, targetCount);
       const nextRound = (wsPortalState.round_number || 0) + 1;
@@ -2442,6 +2813,7 @@ D. 1992</pre>
           round_number: nextRound,
           active_words: finalWordsForRound,
           word_count: targetCount,
+          grid_size: chosenGridSize,
           updated_at: new Date().toISOString()
         });
 
@@ -2449,10 +2821,10 @@ D. 1992</pre>
       btn.textContent = "🟢 Open Portal & Start New Round";
 
       if (error) {
-        alert("Error opening round. Make sure you ran the Word Search SQL tables in Supabase.");
+        alert("Error opening round. Make sure you ran the updated SQL in Supabase.");
         console.error(error);
       } else {
-        alert(`Round #${nextRound} is LIVE with ${targetCount} selected words! Visitors can now participate.`);
+        alert(`Round #${nextRound} is LIVE (${chosenGridSize}×${chosenGridSize} Grid, ${targetCount} Words)!`);
         refreshAdminWsControlPanel();
       }
     }
@@ -2466,7 +2838,8 @@ D. 1992</pre>
           is_open: false,
           round_number: wsPortalState.round_number || 1,
           active_words: wsPortalState.active_words || [],
-          word_count: wsPortalState.word_count || 20,
+          word_count: wsPortalState.word_count || 15,
+          grid_size: wsPortalState.grid_size || 15,
           updated_at: new Date().toISOString()
         });
 
@@ -2501,7 +2874,7 @@ D. 1992</pre>
           .upsert(rows, { onConflict: "word" });
 
         if (error) {
-          alert("Error saving words. Check your Supabase table.");
+          alert("Error saving words.");
           console.error(error);
         } else {
           alert(`Added ${uniqueNew.length} words to your bank!`);
@@ -2518,6 +2891,7 @@ D. 1992</pre>
     // Add Single Quiz Question
     async function handleAddSingleQuestion(event) {
       event.preventDefault();
+      const bankNum = parseInt(document.getElementById("newQBankSelect").value, 10) || 1;
       const qText = document.getElementById("newQText").value.trim();
       const options = [
         document.getElementById("newQOpt0").value.trim(),
@@ -2534,14 +2908,14 @@ D. 1992</pre>
 
       if (supabaseClient) {
         const { error } = await supabaseClient.from("questions").insert([
-          { question_text: qText, options: options, correct_index: 0 }
+          { question_text: qText, options: options, correct_index: 0, bank_number: bankNum }
         ]);
 
         if (error) {
           alert("Error saving question to Supabase.");
           console.error(error);
         } else {
-          alert("Question added to the live quiz!");
+          alert(`Question added to Set ${bankNum}!`);
           event.target.reset();
           await syncQuestionBank();
         }
@@ -2551,156 +2925,109 @@ D. 1992</pre>
       btn.textContent = "Save Question to Live Bank";
     }
 
-    // Parse Word (.docx) File
-    function handleDocxFileSelected(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function (loadEvent) {
-        mammoth
-          .extractRawText({ arrayBuffer: loadEvent.target.result })
-          .then(function (result) {
-            parsedDocxQuestions = parseQuestionsFromText(result.value);
-            displayParsedDocxPreview(parsedDocxQuestions);
-          })
-          .catch(function (err) {
-            alert("Could not read this .docx file.");
-            console.error(err);
-          });
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function parseQuestionsFromText(rawText) {
-      const lines = rawText
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter((l) => l.length > 0);
-
-      const extracted = [];
-      let currentQ = null;
-      let currentOpts = [];
-      let correctIdx = 0;
-
-      const optionRegex = /^([A-Da-d])[\.\)\:\-]\s*(.+)$/;
-
-      lines.forEach((line) => {
-        const optMatch = line.match(optionRegex);
-        if (optMatch && currentQ) {
-          let optText = optMatch[2].trim();
-          if (optText.endsWith("*")) {
-            optText = optText.slice(0, -1).trim();
-            correctIdx = currentOpts.length;
-          }
-          currentOpts.push(optText);
-
-          if (currentOpts.length === 4) {
-            extracted.push({
-              question_text: currentQ,
-              options: currentOpts,
-              correct_index: correctIdx
-            });
-            currentQ = null;
-            currentOpts = [];
-            correctIdx = 0;
-          }
-        } else {
-          if (currentQ && currentOpts.length >= 2) {
-            while (currentOpts.length < 4) currentOpts.push("N/A");
-            extracted.push({
-              question_text: currentQ,
-              options: currentOpts.slice(0, 4),
-              correct_index: correctIdx
-            });
-          }
-          currentQ = line.replace(/^(Q?\d+[\.\)\:\-]\s*)/i, "").trim();
-          currentOpts = [];
-          correctIdx = 0;
-        }
-      });
-
-      return extracted;
-    }
-
-    function displayParsedDocxPreview(items) {
-      const area = document.getElementById("docxPreviewArea");
-      const summary = document.getElementById("docxParseSummary");
-      const list = document.getElementById("docxPreviewList");
-
-      area.classList.remove("hidden");
-      if (items.length === 0) {
-        summary.textContent = "No valid questions found. Check the formatting guide above.";
-        list.innerHTML = "";
-        return;
-      }
-
-      summary.textContent = `✓ Found ${items.length} valid questions ready to upload:`;
-      list.innerHTML = items
-        .map(
-          (item, i) => `
-          <div style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-size: 0.85rem;">
-            <strong>${i + 1}. ${escapeHtml(item.question_text)}</strong><br/>
-            <span style="color: var(--success);">✓ Correct: ${escapeHtml(item.options[item.correct_index])}</span>
-          </div>
-        `
-        )
-        .join("");
-    }
-
-    async function uploadParsedDocxQuestions() {
-      if (parsedDocxQuestions.length === 0) return;
-
-      const btn = document.getElementById("confirmUploadDocxBtn");
-      btn.disabled = true;
-      btn.textContent = "Uploading to Live Quiz...";
-
-      if (supabaseClient) {
-        const { error } = await supabaseClient.from("questions").insert(parsedDocxQuestions);
-
-        if (error) {
-          alert("Error uploading questions.");
-          console.error(error);
-        } else {
-          alert(`Success! ${parsedDocxQuestions.length} new questions are now live in the quiz!`);
-          parsedDocxQuestions = [];
-          document.getElementById("docxFileInput").value = "";
-          document.getElementById("docxPreviewArea").classList.add("hidden");
-          await syncQuestionBank();
-        }
-      }
-
-      btn.disabled = false;
-      btn.textContent = "Upload All Questions to Live Quiz";
-    }
-
+    // View / Edit / Delete All Questions
     async function renderAdminQuestionsList() {
       await syncQuestionBank();
+      const filterVal = document.getElementById("filterAdminQBank").value;
       const container = document.getElementById("adminQuestionsList");
       container.innerHTML = "";
 
-      allQuestionsPool.forEach((item, index) => {
+      const filtered =
+        filterVal === "all"
+          ? allQuestionsPool
+          : allQuestionsPool.filter((q) => String(q.bank) === filterVal);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:16px;">No questions in this set yet.</p>`;
+        return;
+      }
+
+      filtered.forEach((item, index) => {
         const div = document.createElement("div");
         div.className = "admin-q-item";
         div.innerHTML = `
-          <div style="font-size: 0.88rem;">
+          <div style="font-size: 0.88rem; flex: 1;">
+            <span class="badge-pill" style="margin-bottom:4px;">Set ${item.bank}</span><br/>
             <strong>${index + 1}. ${escapeHtml(item.q)}</strong>
             <div style="color: var(--success); font-size: 0.8rem; margin-top: 3px;">
               ✓ ${escapeHtml(item.options[item.answer])}
             </div>
           </div>
-          ${
-            item.isFromDb
-              ? `<button class="btn-danger-outline" onclick="deleteDbQuestion(${item.id})">Delete</button>`
-              : `<span style="font-size: 0.72rem; color: var(--text-muted); background: #EDF2F7; padding: 3px 7px; border-radius: 6px;">Built-in</span>`
-          }
+          <div style="display:flex; gap:6px; flex-shrink:0;">
+            <button class="btn-edit-outline" onclick="openEditQuestionModal(${item.id})">Edit</button>
+            <button class="btn-danger-outline" onclick="deleteDbQuestion(${item.id})">Remove</button>
+          </div>
         `;
         container.appendChild(div);
       });
     }
 
+    function openEditQuestionModal(id) {
+      const item = allQuestionsPool.find((q) => q.id === id);
+      if (!item) return;
+
+      document.getElementById("editQId").value = item.id;
+      document.getElementById("editQBank").value = String(item.bank || 1);
+      document.getElementById("editQText").value = item.q;
+
+      // Put correct answer in Opt0, and the remaining 3 in Opt1..3
+      const correctText = item.options[item.answer];
+      const wrongOpts = item.options.filter((_, idx) => idx !== item.answer);
+
+      document.getElementById("editQOpt0").value = correctText || "";
+      document.getElementById("editQOpt1").value = wrongOpts[0] || "";
+      document.getElementById("editQOpt2").value = wrongOpts[1] || "";
+      document.getElementById("editQOpt3").value = wrongOpts[2] || "";
+
+      document.getElementById("editQuestionModal").classList.remove("hidden");
+    }
+
+    function closeEditQuestionModal() {
+      document.getElementById("editQuestionModal").classList.add("hidden");
+    }
+
+    async function saveEditedQuestion(event) {
+      event.preventDefault();
+      const id = parseInt(document.getElementById("editQId").value, 10);
+      const bankNum = parseInt(document.getElementById("editQBank").value, 10) || 1;
+      const qText = document.getElementById("editQText").value.trim();
+      const options = [
+        document.getElementById("editQOpt0").value.trim(),
+        document.getElementById("editQOpt1").value.trim(),
+        document.getElementById("editQOpt2").value.trim(),
+        document.getElementById("editQOpt3").value.trim()
+      ];
+
+      const btn = document.getElementById("saveEditQBtn");
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+
+      if (supabaseClient) {
+        const { error } = await supabaseClient
+          .from("questions")
+          .update({
+            question_text: qText,
+            options: options,
+            correct_index: 0,
+            bank_number: bankNum
+          })
+          .eq("id", id);
+
+        if (error) {
+          alert("Error updating question.");
+          console.error(error);
+        } else {
+          closeEditQuestionModal();
+          await renderAdminQuestionsList();
+        }
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Save Changes";
+    }
+
     async function deleteDbQuestion(id) {
-      if (!confirm("Delete this question from the live quiz?")) return;
+      if (!confirm("Remove this question permanently?")) return;
       if (supabaseClient) {
         await supabaseClient.from("questions").delete().eq("id", id);
         await renderAdminQuestionsList();
