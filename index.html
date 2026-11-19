@@ -1615,6 +1615,16 @@ D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
               />
             </div>
 
+            <div class="form-group">
+              <label for="adminTvQrUrlInput">QR Code Link (Join URL for Attendees) *</label>
+              <input
+                type="url"
+                id="adminTvQrUrlInput"
+                required
+                placeholder="https://waqf-e-nau.vercel.app/"
+              />
+            </div>
+
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
               <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 180px;" id="saveTvSettingsBtn">
                 Save Display Settings
@@ -3527,7 +3537,8 @@ D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
     const DEFAULT_TV_SETTINGS = {
       speedTitle: "⚡ SURVIVAL OF THE FASTEST — SPEED & ACCURACY BOTH COUNT!",
       speedMessage: "Don't just aim to finish—aim to finish fast and accurately! When scores or words found are equal, the fastest completion time takes the higher rank. Every second matters in the Quiz and the Word Puzzle!",
-      topLimit: 10
+      topLimit: 10,
+      qrUrl: "https://waqf-e-nau.vercel.app/"
     };
 
     function getTvDisplaySettings() {
@@ -3538,7 +3549,8 @@ D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
           return {
             speedTitle: parsed.speedTitle || DEFAULT_TV_SETTINGS.speedTitle,
             speedMessage: parsed.speedMessage || DEFAULT_TV_SETTINGS.speedMessage,
-            topLimit: Math.min(50, Math.max(1, parseInt(parsed.topLimit, 10) || 10))
+            topLimit: Math.min(50, Math.max(1, parseInt(parsed.topLimit, 10) || 10)),
+            qrUrl: (parsed.qrUrl || DEFAULT_TV_SETTINGS.qrUrl).trim()
           };
         }
       } catch (e) {}
@@ -3549,10 +3561,12 @@ D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
       const normalized = {
         speedTitle: (settings.speedTitle || "").trim() || DEFAULT_TV_SETTINGS.speedTitle,
         speedMessage: (settings.speedMessage || "").trim() || DEFAULT_TV_SETTINGS.speedMessage,
-        topLimit: Math.min(50, Math.max(1, parseInt(settings.topLimit, 10) || 10))
+        topLimit: Math.min(50, Math.max(1, parseInt(settings.topLimit, 10) || 10)),
+        qrUrl: (settings.qrUrl || DEFAULT_TV_SETTINGS.qrUrl).trim()
       };
       localStorage.setItem("wn_jalsa_tv_settings_v1", JSON.stringify(normalized));
       applyTvDisplaySettingsToDom(normalized);
+      renderPublicTvQrCode(normalized.qrUrl);
       return normalized;
     }
 
@@ -3577,6 +3591,7 @@ D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
       document.getElementById("adminTvSpeedTitleInput").value = s.speedTitle;
       document.getElementById("adminTvSpeedMessageInput").value = s.speedMessage;
       document.getElementById("adminTvTopLimitInput").value = s.topLimit;
+      document.getElementById("adminTvQrUrlInput").value = s.qrUrl || DEFAULT_TV_SETTINGS.qrUrl;
       document.getElementById("tvSettingsSavedMsg").textContent = "";
     }
 
@@ -3585,15 +3600,17 @@ D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
       const titleVal = document.getElementById("adminTvSpeedTitleInput").value;
       const msgVal = document.getElementById("adminTvSpeedMessageInput").value;
       const limitVal = parseInt(document.getElementById("adminTvTopLimitInput").value, 10) || 10;
+      const qrVal = document.getElementById("adminTvQrUrlInput").value;
 
       const saved = saveTvDisplaySettings({
         speedTitle: titleVal,
         speedMessage: msgVal,
-        topLimit: limitVal
+        topLimit: limitVal,
+        qrUrl: qrVal
       });
 
       document.getElementById("tvSettingsSavedMsg").textContent =
-        `✓ Saved! Public Display now shows Top ${saved.topLimit} and your updated speed message.`;
+        `✓ Saved! Public Display now shows Top ${saved.topLimit}, your speed message, and QR link ${saved.qrUrl}.`;
     }
 
     function launchPublicTvDisplay() {
@@ -3749,11 +3766,16 @@ D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
     }
 
     // Pure JS QR Code Matrix Generator (Version 1-6 Byte Mode, ECC-L) with SVG output
-    function renderPublicTvQrCode() {
-      const cleanUrl = window.location.href.split("#")[0].split("?")[0] || "https://waqfenau-ghana.example";
-      document.getElementById("tvQrUrlText").textContent = cleanUrl;
+    function renderPublicTvQrCode(overrideUrl) {
+      const s = getTvDisplaySettings();
+      let targetUrl = (overrideUrl || s.qrUrl || "").trim();
+      if (!targetUrl) {
+        const loc = window.location.href.split("#")[0].split("?")[0];
+        targetUrl = loc && loc.startsWith("http") ? loc : DEFAULT_TV_SETTINGS.qrUrl;
+      }
+      document.getElementById("tvQrUrlText").textContent = targetUrl;
       const container = document.getElementById("tvQrCodeContainer");
-      container.innerHTML = generateQrSvg(cleanUrl, 184);
+      container.innerHTML = generateQrSvg(targetUrl, 184);
     }
 
     // Lightweight QR code generator supporting alphanumeric/URL strings up to ~84 bytes
