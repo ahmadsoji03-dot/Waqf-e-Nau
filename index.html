@@ -3,27 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Waqf-e-Nau Ghana | Jalsa Salana Interactive Hub</title>
-  <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Mammoth.js to read .docx (Word) files directly in the browser -->
-  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+  <title>Quiz Leaderboard & Results (With Position Hold Timer & Dethrone Alerts)</title>
   <style>
     :root {
-      --primary-blue: #0047AB;
-      --dark-blue: #002D72;
-      --light-blue: #EBF3FF;
-      --accent-blue: #1E88E5;
-      --white: #FFFFFF;
-      --off-white: #F7FAFC;
-      --text-dark: #1A202C;
-      --text-muted: #4A5568;
-      --border-color: #CBD5E0;
-      --success: #16A34A;
-      --success-bg: #F0FDF4;
-      --danger: #DC2626;
-      --danger-bg: #FEF2F2;
-      --gold: #D97706;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-elevated: #273549;
+      --border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --accent-gold: #f59e0b;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --radius: 14px;
     }
 
     * {
@@ -34,3961 +28,1143 @@
     }
 
     body {
-      background: linear-gradient(135deg, var(--dark-blue) 0%, var(--primary-blue) 100%);
-      color: var(--text-dark);
+      background-color: var(--bg);
+      color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 16px;
+      padding: 24px 16px 80px;
     }
 
     .container {
       width: 100%;
-      max-width: 780px;
-      margin: 0 auto;
+      max-width: 760px;
     }
 
-    /* Header */
-    .header {
-      text-align: center;
-      color: var(--white);
-      padding: 18px 12px 22px;
+    /* Demo Switcher Bar */
+    .demo-controls {
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.85rem;
     }
 
-    .logo-wrapper {
-      width: 88px;
-      height: 88px;
-      margin: 0 auto 12px;
-      background: var(--white);
-      border-radius: 50%;
+    .demo-controls span {
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    .demo-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .demo-btn {
+      background: var(--surface);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.15s ease;
+    }
+
+    .demo-btn:hover, .demo-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .demo-btn.danger-sim {
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+    }
+
+    .demo-btn.danger-sim:hover {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+      color: #fff;
+    }
+
+    /* Notification Opt-In Bar */
+    .notif-bar {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(59, 130, 246, 0.14));
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-      overflow: hidden;
-      border: 3px solid var(--light-blue);
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
-    .logo-wrapper img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
+    .notif-bar.enabled {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.4);
     }
 
-    .logo-placeholder {
-      font-weight: 800;
-      font-size: 13px;
-      color: var(--primary-blue);
-      text-align: center;
-      line-height: 1.2;
-      padding: 6px;
+    .notif-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 240px;
     }
 
-    .header h1 {
-      font-size: 1.65rem;
-      font-weight: 800;
-      letter-spacing: 0.3px;
+    .notif-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .notif-text h4 {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+
+    .notif-text p {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .notif-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-notif {
+      background: var(--accent-green);
+      color: #06281e;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 9px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-notif:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn-notif-secondary {
+      background: var(--surface-elevated);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.82rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-notif-secondary:hover {
+      border-color: var(--primary);
+    }
+
+    /* Simulated Lock-Screen / System Push Toast */
+    .push-toast-container {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 360px;
+      width: calc(100% - 36px);
+      pointer-events: none;
+    }
+
+    .push-toast {
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(239, 68, 68, 0.65);
+      border-left: 5px solid var(--accent-red);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.55);
+      animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+
+    .push-toast-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .push-toast-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #fca5a5;
       margin-bottom: 4px;
     }
 
-    .header p {
-      font-size: 0.95rem;
-      color: var(--light-blue);
-      opacity: 0.95;
+    .push-toast-body {
+      font-size: 0.86rem;
+      color: #e2e8f0;
+      line-height: 1.4;
+      margin-bottom: 10px;
     }
 
-    /* Navigation Tabs */
-    .nav-tabs {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      padding: 5px;
+    .push-toast-cta {
+      display: inline-block;
+      background: var(--accent-red);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(110%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Card Base */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Pre-Quiz / Quiz Stakes Banner */
+    .stakes-banner {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(59, 130, 246, 0.16));
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .stakes-icon {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .stakes-content h3 {
+      font-size: 1rem;
+      color: #fcd34d;
+      margin-bottom: 4px;
+    }
+
+    .stakes-content p {
+      font-size: 0.9rem;
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+
+    /* Quiz View */
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timer-pill {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+    }
+
+    .question-text {
+      font-size: 1.2rem;
+      font-weight: 600;
       margin-bottom: 18px;
-      backdrop-filter: blur(6px);
+      line-height: 1.4;
     }
 
-    @media (max-width: 560px) {
-      .nav-tabs {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    .options-grid {
+      display: grid;
+      gap: 12px;
     }
 
-    .nav-tab {
-      padding: 10px 6px;
-      border: none;
-      background: transparent;
-      color: var(--white);
+    .option-btn {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 14px 18px;
+      border-radius: 10px;
+      text-align: left;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .option-btn:hover {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    /* Results Hero Section */
+    .result-hero {
+      text-align: center;
+      padding: 32px 24px;
+    }
+
+    .badge-rank {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      color: #fcd34d;
       font-weight: 700;
       font-size: 0.85rem;
-      border-radius: 9px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-rank.top-ten {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #6ee7b7;
+    }
+
+    .badge-rank.dethroned {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+    }
+
+    .congrats-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .standing-callout {
+      font-size: 1.15rem;
+      color: var(--text-main);
+      margin-bottom: 12px;
+    }
+
+    .standing-callout strong {
+      color: #60a5fa;
+      font-size: 1.3rem;
+    }
+
+    /* Live Hold Reign Banner in Hero */
+    .reign-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-green);
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 16px 0 20px;
+    }
+
+    .stat-box {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 10px;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .encouragement-box {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 10px;
+      padding: 16px;
+      margin: 20px 0;
+      font-size: 0.98rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .encouragement-box.alert-mode {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .cta-primary {
+      display: inline-block;
+      width: 100%;
+      max-width: 360px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 15px 24px;
+      border: none;
+      border-radius: 10px;
       cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: center;
+      transition: background 0.15s ease, transform 0.1s ease;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
     }
 
-    .nav-tab.active {
-      background: var(--white);
-      color: var(--primary-blue);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    .cta-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
     }
 
-    /* Cards */
-    .card {
-      background: var(--white);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-      margin-bottom: 20px;
+    .cta-primary.urgent {
+      background: var(--accent-red);
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    }
+
+    .cta-primary.urgent:hover {
+      background: #dc2626;
+    }
+
+    .best-score-note {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Section Headings */
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Wrong Answers Review */
+    .wrong-item {
+      background: var(--surface-elevated);
+      border-left: 4px solid var(--accent-red);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .wrong-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .wrong-q {
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .answer-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.88rem;
+    }
+
+    .your-ans {
+      color: #fca5a5;
+    }
+
+    .correct-ans {
+      color: #6ee7b7;
+      font-weight: 600;
+    }
+
+    .perfect-score-msg {
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    /* Leaderboard Table */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .leaderboard-table th {
+      text-align: left;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .leaderboard-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }
+
+    .leaderboard-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .leaderboard-table tr.highlight-user {
+      background: rgba(59, 130, 246, 0.22);
+      font-weight: 700;
+    }
+
+    .leaderboard-table tr.highlight-user td:first-child {
+      border-left: 3px solid var(--primary);
+    }
+
+    .rank-medal {
+      font-weight: 700;
+      display: inline-block;
+      min-width: 28px;
+    }
+
+    /* Hold Timer Badges inside Leaderboard */
+    .hold-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hold-fresh {
+      background: rgba(59, 130, 246, 0.16);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+    }
+
+    .hold-steady {
+      background: rgba(148, 163, 184, 0.12);
+      color: #cbd5e1;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .hold-legend {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.4);
     }
 
     .hidden {
       display: none !important;
     }
 
-    /* Form Elements */
-    .form-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--dark-blue);
-      margin-bottom: 6px;
-    }
-
-    .form-subtitle {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      margin-bottom: 20px;
-      line-height: 1.45;
-    }
-
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 0.86rem;
-      font-weight: 600;
-      color: var(--text-dark);
-      margin-bottom: 5px;
-    }
-
-    .form-group input, .form-group textarea, .form-group select {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid var(--border-color);
-      border-radius: 10px;
-      font-size: 0.98rem;
-      transition: border-color 0.2s;
-      background: var(--white);
-    }
-
-    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-      outline: none;
-      border-color: var(--primary-blue);
-      box-shadow: 0 0 0 3px var(--light-blue);
-    }
-
-    .btn {
-      width: 100%;
-      padding: 13px;
-      border: none;
-      border-radius: 10px;
-      font-size: 0.98rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.1s, background-color 0.2s;
-    }
-
-    .btn:active {
-      transform: scale(0.99);
-    }
-
-    .btn-primary {
-      background: var(--primary-blue);
-      color: var(--white);
-    }
-
-    .btn-primary:hover {
-      background: var(--dark-blue);
-    }
-
-    .btn-secondary {
-      background: var(--light-blue);
-      color: var(--primary-blue);
-      margin-top: 10px;
-    }
-
-    .btn-secondary:hover {
-      background: #DCE8FF;
-    }
-
-    .btn-success {
-      background: var(--success);
-      color: var(--white);
-    }
-
-    .btn-danger-outline {
-      background: transparent;
-      border: 1.5px solid #FCA5A5;
-      color: var(--danger);
-      padding: 6px 10px;
-      font-size: 0.8rem;
-      width: auto;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .btn-danger-outline:hover {
-      background: var(--danger-bg);
-    }
-
-    .btn-edit-outline {
-      background: transparent;
-      border: 1.5px solid #93C5FD;
-      color: var(--primary-blue);
-      padding: 6px 10px;
-      font-size: 0.8rem;
-      width: auto;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .btn-edit-outline:hover {
-      background: var(--light-blue);
-    }
-
-    /* Quiz Top Bar */
-    .quiz-status-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--light-blue);
-      padding: 12px 16px;
-      border-radius: 12px;
-      margin-bottom: 18px;
-    }
-
-    .progress-badge {
-      font-weight: 700;
-      color: var(--dark-blue);
-      font-size: 0.95rem;
-    }
-
-    .timer-badge {
-      font-family: monospace;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--primary-blue);
-      background: var(--white);
-      padding: 4px 10px;
-      border-radius: 8px;
-      border: 1px solid #BFDBFE;
-    }
-
-    .progress-track {
-      width: 100%;
-      height: 8px;
-      background: #E2E8F0;
-      border-radius: 99px;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--primary-blue);
-      width: 5%;
-      transition: width 0.3s ease;
-    }
-
-    .question-text {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--text-dark);
-      line-height: 1.45;
-      margin-bottom: 18px;
-    }
-
-    .options-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 22px;
-    }
-
-    .option-btn {
-      text-align: left;
-      padding: 14px 16px;
-      background: var(--off-white);
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      font-size: 0.98rem;
-      font-weight: 500;
-      color: var(--text-dark);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .option-btn:hover {
-      border-color: var(--accent-blue);
-      background: var(--light-blue);
-    }
-
-    .option-btn.selected {
-      border-color: var(--primary-blue);
-      background: var(--light-blue);
-      color: var(--dark-blue);
-      font-weight: 700;
-    }
-
-    .option-letter {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: var(--white);
-      border: 1.5px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.85rem;
-      flex-shrink: 0;
-    }
-
-    .option-btn.selected .option-letter {
-      background: var(--primary-blue);
-      color: var(--white);
-      border-color: var(--primary-blue);
-    }
-
-    .quiz-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      border-top: 1px solid #EDF2F7;
-      padding-top: 16px;
-    }
-
-    /* Word Search Grid & Word Bank */
-    .ws-lock-box {
-      text-align: center;
-      padding: 28px 16px;
-      background: var(--off-white);
-      border: 2px dashed #93C5FD;
-      border-radius: 14px;
-    }
-
-    .ws-lock-icon {
-      font-size: 2.6rem;
-      margin-bottom: 10px;
-    }
-
-    .ws-grid-wrapper {
-      width: 100%;
-      overflow-x: auto;
-      display: flex;
-      justify-content: center;
-      margin-bottom: 18px;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    .ws-grid {
-      display: grid;
-      gap: 3px;
-      background: #CBD5E0;
-      padding: 5px;
-      border-radius: 10px;
-      border: 2px solid var(--primary-blue);
-      touch-action: none;
-    }
-
-    .ws-cell {
-      aspect-ratio: 1 / 1;
-      background: var(--white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 0.95rem;
-      color: var(--dark-blue);
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.1s, color 0.1s;
-    }
-
-    @media (max-width: 480px) {
-      .ws-cell {
-        font-size: 0.78rem;
-      }
-    }
-
-    .ws-cell.found {
-      background: #DBEAFE;
-      color: var(--primary-blue);
-      border: 1px solid #93C5FD;
-    }
-
-    .ws-cell.selected {
-      background: var(--primary-blue) !important;
-      color: var(--white) !important;
-      transform: scale(1.06);
-    }
-
-    .ws-word-bank-title {
-      font-size: 0.92rem;
-      font-weight: 700;
-      color: var(--dark-blue);
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .ws-word-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
-      gap: 8px;
-      background: var(--off-white);
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid #E2E8F0;
-    }
-
-    .ws-word-chip {
-      background: var(--white);
-      border: 1.5px solid #CBD5E0;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--text-dark);
-      text-align: center;
-      letter-spacing: 0.4px;
-    }
-
-    .ws-word-chip.found {
-      background: var(--success-bg);
-      border-color: #86EFAC;
-      color: var(--success);
-      text-decoration: line-through;
-    }
-
-    /* Results & Mistake Review */
-    .result-banner {
-      text-align: center;
-      padding: 12px 0 16px;
-    }
-
-    .result-score-circle {
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      background: var(--light-blue);
-      border: 5px solid var(--primary-blue);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 14px;
-    }
-
-    .result-score-circle .pct {
-      font-size: 1.65rem;
-      font-weight: 800;
-      color: var(--dark-blue);
-      line-height: 1;
-    }
-
-    .result-score-circle .lbl {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--primary-blue);
-      text-transform: uppercase;
-      margin-top: 4px;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin: 16px 0;
-    }
-
-    .stat-box {
-      background: var(--off-white);
-      padding: 12px;
-      border-radius: 10px;
-      text-align: center;
-      border: 1px solid #E2E8F0;
-    }
-
-    .stat-box .val {
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: var(--dark-blue);
-    }
-
-    .stat-box .key {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .mistakes-section {
-      margin-top: 22px;
-      padding-top: 18px;
-      border-top: 2px solid #EDF2F7;
-      text-align: left;
-    }
-
-    .mistakes-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--dark-blue);
-      margin-bottom: 12px;
-    }
-
-    .mistake-card {
-      background: var(--off-white);
-      border: 1px solid #E2E8F0;
-      border-left: 4px solid var(--danger);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-
-    .mistake-q {
-      font-weight: 700;
-      font-size: 0.94rem;
-      color: var(--text-dark);
-      margin-bottom: 8px;
-      line-height: 1.4;
-    }
-
-    .mistake-ans-wrong {
-      font-size: 0.86rem;
-      color: var(--danger);
-      background: var(--danger-bg);
-      padding: 6px 10px;
-      border-radius: 6px;
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-
-    .mistake-ans-correct {
-      font-size: 0.86rem;
-      color: var(--success);
-      background: var(--success-bg);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-weight: 600;
-    }
-
-    .perfect-banner {
-      background: var(--success-bg);
-      color: var(--success);
-      border: 1px solid #BBF7D0;
-      padding: 12px;
-      border-radius: 10px;
-      text-align: center;
-      font-weight: 700;
-      font-size: 0.92rem;
-      margin-top: 18px;
-    }
-
-    /* Leaderboard Table */
-    .lb-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-
-    .lb-refresh-btn {
-      background: var(--light-blue);
-      color: var(--primary-blue);
-      border: none;
-      padding: 7px 12px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .lb-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .lb-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 14px;
-      background: var(--off-white);
-      border-radius: 12px;
-      border: 1px solid #E2E8F0;
-      gap: 10px;
-    }
-
-    .lb-item.top-1 { background: #FFFBEB; border-color: #FCD34D; }
-    .lb-item.top-2 { background: #F8FAFC; border-color: #CBD5E1; }
-    .lb-item.top-3 { background: #FFF7ED; border-color: #FDBA74; }
-
-    .lb-rank {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: var(--primary-blue);
-      color: var(--white);
-      font-weight: 800;
-      font-size: 0.88rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .top-1 .lb-rank { background: #D97706; }
-    .top-2 .lb-rank { background: #64748B; }
-    .top-3 .lb-rank { background: #C2410C; }
-
-    .lb-user {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .lb-name {
-      font-weight: 700;
-      font-size: 0.96rem;
-      color: var(--text-dark);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .lb-prof {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .lb-metrics {
-      text-align: right;
-      flex-shrink: 0;
-    }
-
-    .lb-acc {
-      font-weight: 800;
-      font-size: 0.98rem;
-      color: var(--primary-blue);
-    }
-
-    .lb-time {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      font-family: monospace;
-    }
-
-    /* Admin Sub-tabs & Styling */
-    .admin-subtabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 18px;
-      border-bottom: 2px solid #E2E8F0;
-      padding-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    .admin-subtab {
-      padding: 8px 12px;
-      border: 1.5px solid var(--border-color);
-      background: var(--off-white);
-      color: var(--text-dark);
-      border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .admin-subtab.active {
-      background: var(--primary-blue);
-      color: var(--white);
-      border-color: var(--primary-blue);
-    }
-
-    .format-guide {
-      background: var(--light-blue);
-      border: 1px solid #BFDBFE;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 0.84rem;
-      color: var(--dark-blue);
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-
-    .format-guide pre {
-      background: var(--white);
-      padding: 8px 10px;
-      border-radius: 6px;
-      margin-top: 8px;
-      font-size: 0.8rem;
-      overflow-x: auto;
-      border: 1px solid #CBD5E0;
-    }
-
-    .admin-q-item {
-      background: var(--off-white);
-      border: 1px solid #E2E8F0;
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
-    .ws-control-card {
-      background: var(--light-blue);
-      border: 2px solid #93C5FD;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 18px;
-    }
-
-    .bank-card {
-      background: var(--off-white);
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 14px;
-      transition: border-color 0.2s, background 0.2s;
-    }
-
-    .bank-card.active-bank {
-      border-color: var(--success);
-      background: var(--success-bg);
-    }
-
-    .badge-pill {
-      display: inline-block;
-      padding: 3px 9px;
-      border-radius: 99px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      background: #E2E8F0;
-      color: var(--text-dark);
-    }
-
-    .status-pill {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 99px;
-      font-size: 0.8rem;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    .status-pill.open {
-      background: var(--success-bg);
-      color: var(--success);
-      border: 1px solid #86EFAC;
-    }
-
-    .status-pill.closed {
-      background: var(--danger-bg);
-      color: var(--danger);
-      border: 1px solid #FCA5A5;
-    }
-
-    /* Modal for Editing Question */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 16px;
-    }
-
-    .modal-box {
-      background: var(--white);
-      border-radius: 16px;
-      padding: 22px;
-      width: 100%;
-      max-width: 520px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-
-    /* =====================================================================
-       PUBLIC BIG SCREEN / SMART TV LIVE DISPLAY MODE
-       ===================================================================== */
-    body.tv-display-mode {
-      padding: 16px 20px;
-      background: radial-gradient(circle at top, #003b8e 0%, #001c47 100%);
-    }
-
-    body.tv-display-mode .container {
-      max-width: 1380px;
-      width: 100%;
-    }
-
-    .tv-display-card {
-      background: rgba(255, 255, 255, 0.98);
-      border-radius: 20px;
-      padding: 22px 24px 26px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-      margin-bottom: 16px;
-    }
-
-    .tv-topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 14px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #E2E8F0;
-      margin-bottom: 18px;
-    }
-
-    .tv-brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .tv-brand-logo {
-      width: 62px;
-      height: 62px;
-      border-radius: 50%;
-      overflow: hidden;
-      background: var(--white);
-      border: 3px solid var(--primary-blue);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .tv-brand-logo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .tv-title {
-      font-size: 1.55rem;
-      font-weight: 900;
-      color: var(--dark-blue);
-      line-height: 1.15;
-    }
-
-    .tv-subtitle {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      font-weight: 600;
-      margin-top: 3px;
-    }
-
-    .tv-controls-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .live-pulse-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: var(--success-bg);
-      color: var(--success);
-      border: 1.5px solid #86EFAC;
-      padding: 7px 14px;
-      border-radius: 99px;
-      font-size: 0.82rem;
-      font-weight: 800;
-      letter-spacing: 0.4px;
-    }
-
-    .live-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: tvPulse 1.5s infinite;
-    }
-
-    @keyframes tvPulse {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.65); }
-      70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
-    }
-
-    .tv-speed-banner {
-      background: linear-gradient(90deg, #002D72 0%, #0047AB 60%, #0F52BA 100%);
-      color: var(--white);
-      border-radius: 14px;
-      padding: 15px 18px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-      border-left: 6px solid #FBBF24;
-    }
-
-    .tv-speed-banner h3 {
-      font-size: 1.08rem;
-      font-weight: 800;
-      color: #FDE68A;
-      margin-bottom: 4px;
-    }
-
-    .tv-speed-banner p {
-      font-size: 0.92rem;
-      line-height: 1.45;
-      color: var(--white);
-      opacity: 0.96;
-    }
-
-    .tv-main-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 270px;
-      gap: 18px;
-      align-items: start;
-    }
-
-    @media (max-width: 1120px) {
-      .tv-main-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-      .tv-qr-panel {
-        grid-column: 1 / -1;
-        flex-direction: row !important;
-        justify-content: space-around;
-        align-items: center;
-        text-align: left !important;
-      }
-    }
-
-    @media (max-width: 780px) {
-      .tv-main-grid {
+    @media (max-width: 560px) {
+      .stats-row {
         grid-template-columns: 1fr;
       }
-      .tv-qr-panel {
-        flex-direction: column !important;
-        text-align: center !important;
+      .congrats-title {
+        font-size: 1.5rem;
       }
-    }
-
-    .tv-board-col {
-      background: var(--off-white);
-      border: 1.5px solid #CBD5E0;
-      border-radius: 16px;
-      padding: 16px;
-    }
-
-    .tv-board-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1.5px solid #E2E8F0;
-    }
-
-    .tv-board-title {
-      font-size: 1.12rem;
-      font-weight: 800;
-      color: var(--dark-blue);
-    }
-
-    .tv-board-sub {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .tv-qr-panel {
-      background: var(--light-blue);
-      border: 2px solid #93C5FD;
-      border-radius: 16px;
-      padding: 18px 16px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .tv-qr-box {
-      background: var(--white);
-      padding: 10px;
-      border-radius: 12px;
-      border: 2px solid var(--primary-blue);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 6px 16px rgba(0, 71, 171, 0.14);
-    }
-
-    .tv-qr-url {
-      font-size: 0.72rem;
-      color: var(--dark-blue);
-      background: var(--white);
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid #BFDBFE;
-      word-break: break-all;
-      width: 100%;
-      font-weight: 600;
-    }
-
-    .footer-bar {
-      text-align: center;
-      margin-top: 10px;
-      padding-bottom: 20px;
-    }
-
-    .mode-banner {
-      font-size: 0.78rem;
-      color: var(--light-blue);
-      opacity: 0.85;
-      margin-bottom: 8px;
-    }
-
-    .admin-link-btn {
-      background: rgba(255, 255, 255, 0.14);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: var(--white);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .admin-link-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
     }
   </style>
 </head>
 <body>
 
+  <!-- Floating Push Notification Toast Container -->
+  <div id="push-toast-container" class="push-toast-container"></div>
+
   <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <div class="logo-wrapper">
-        <img 
-          src="logo.png" 
-          alt="Waqf-e-Nau Ghana Logo" 
-          onerror="this.style.display='none'; document.getElementById('logoPlaceholder').style.display='block';" 
-        />
-        <div class="logo-placeholder" id="logoPlaceholder" style="display: none;">WAQF-E-NAU<br>GHANA</div>
+    <!-- Interactive Preview Switcher -->
+    <div class="demo-controls">
+      <span>Preview State:</span>
+      <div class="demo-buttons">
+        <button class="demo-btn" onclick="showView('quiz')">1. Quiz Screen</button>
+        <button class="demo-btn active" onclick="renderResultState('outside')">2. #18 of 500</button>
+        <button class="demo-btn" onclick="renderResultState('top10')">3. #9 of 500</button>
+        <button class="demo-btn" onclick="renderResultState('first')">4. #1 of 500</button>
+        <button class="demo-btn danger-sim" onclick="simulateDethrone()">⚡ Test Dethrone Alert</button>
       </div>
-      <h1>Waqf-e-Nau Ghana</h1>
-      <p>Jalsa Salana Exhibition — Interactive Knowledge & Puzzle Hub</p>
-    </header>
-
-    <!-- Main Navigation Tabs (4 Tabs) -->
-    <div class="nav-tabs" id="mainNavTabs">
-      <button class="nav-tab active" id="tabQuiz" onclick="switchTab('quiz')">20-Q Quiz</button>
-      <button class="nav-tab" id="tabQuizLb" onclick="switchTab('quizLb')">Quiz Top 10</button>
-      <button class="nav-tab" id="tabWordSearch" onclick="switchTab('wordSearch')">Word Puzzle</button>
-      <button class="nav-tab" id="tabWsLb" onclick="switchTab('wsLb')">Puzzle Top 10</button>
     </div>
 
-    <!-- =================================================================== -->
-    <!-- MODE 1: 20-QUESTION INTERACTIVE QUIZ                                -->
-    <!-- =================================================================== -->
-    
-    <!-- VIEW 1A: QUIZ REGISTRATION -->
-    <section class="card" id="viewRegister">
-      <h2 class="form-title">20-Question Knowledge Quiz</h2>
-      <p class="form-subtitle">
-        Answer <strong>20 random questions</strong> as accurately and quickly as possible. 
-        Your highest accuracy and fastest time determine your rank on the live Top 10 Leaderboard.
-      </p>
-
-      <form id="registerForm" onsubmit="handleStartQuiz(event)">
-        <div class="form-group">
-          <label for="fullName">Full Name *</label>
-          <input type="text" id="fullName" placeholder="e.g., Ahmad Muhammad Kwame" required />
-        </div>
-
-        <div class="form-group">
-          <label for="email">Email Address * (Used to save/update your score)</label>
-          <input type="email" id="email" placeholder="e.g., ahmad@gmail.com" required />
-        </div>
-
-        <div class="form-group">
-          <label for="profession">Profession or Field of Study *</label>
-          <input type="text" id="profession" placeholder="e.g., Medical Student, Missionary, Engineer, Student" required />
-        </div>
-
-        <button type="submit" class="btn btn-primary" id="startQuizBtn">Start 20-Question Quiz</button>
-      </form>
-    </section>
-
-    <!-- VIEW 1B: ACTIVE QUIZ -->
-    <section class="card hidden" id="viewQuiz">
-      <div class="quiz-status-bar">
-        <span class="progress-badge" id="questionCounter">Question 1 of 20</span>
-        <span class="timer-badge" id="timerDisplay">00:00</span>
-      </div>
-
-      <div class="progress-track">
-        <div class="progress-fill" id="progressBar"></div>
-      </div>
-
-      <div class="question-text" id="questionText">Loading question...</div>
-
-      <div class="options-list" id="optionsContainer"></div>
-
-      <div class="quiz-footer">
-        <button type="button" class="btn-danger-outline" onclick="restartWithNewQuestions()">
-          ↻ Restart (New Questions)
-        </button>
-        <button type="button" class="btn btn-primary" id="nextBtn" style="width: auto; padding: 12px 24px;" onclick="handleNextQuestion()" disabled>
-          Next Question →
-        </button>
-      </div>
-    </section>
-
-    <!-- VIEW 1C: QUIZ RESULTS & MISTAKE REVIEW -->
-    <section class="card hidden" id="viewResults">
-      <div class="result-banner">
-        <div class="result-score-circle">
-          <span class="pct" id="resAccuracy">0%</span>
-          <span class="lbl">Accuracy</span>
-        </div>
-        <h2 class="form-title" id="resPlayerName">JazakAllah!</h2>
-        <p class="form-subtitle" id="resPlayerProf" style="margin-bottom: 0;"></p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="val" id="resScore">0 / 20</div>
-          <div class="key">Correct Answers</div>
-        </div>
-        <div class="stat-box">
-          <div class="val" id="resTime">00:00</div>
-          <div class="key">Time Taken</div>
+    <!-- ========================================== -->
+    <!-- DETHRONE NOTIFICATION OPT-IN BANNER        -->
+    <!-- ========================================== -->
+    <div id="notif-bar" class="notif-bar">
+      <div class="notif-info">
+        <div id="notif-icon" class="notif-icon">🔔</div>
+        <div class="notif-text">
+          <h4 id="notif-title">Turn On Dethrone Alerts</h4>
+          <p id="notif-desc">Get an instant notification on your phone or browser the second someone takes your spot.</p>
         </div>
       </div>
-
-      <p id="saveStatusMsg" style="text-align: center; font-size: 0.88rem; color: var(--primary-blue); font-weight: 600; margin-bottom: 16px;">
-        Saving your score to the Jalsa Salana Leaderboard...
-      </p>
-
-      <button class="btn btn-primary" onclick="switchTab('quizLb')">View Quiz Top 10 Leaderboard</button>
-      <button class="btn btn-secondary" onclick="retakeQuizFromResults()">Retake Quiz (Overwrite Previous Score)</button>
-
-      <!-- Mistake Review Container -->
-      <div id="mistakesContainer"></div>
-    </section>
-
-    <!-- VIEW 1D: QUIZ TOP 10 LEADERBOARD -->
-    <section class="card hidden" id="viewLeaderboard">
-      <div class="lb-header">
-        <div>
-          <h2 class="form-title" style="margin-bottom: 2px;">Quiz Top 10 Leaderboard</h2>
-          <p style="font-size: 0.82rem; color: var(--text-muted);">Ranked by Highest Accuracy, then Fastest Time</p>
-        </div>
-        <button class="lb-refresh-btn" onclick="loadLeaderboard()">↻ Refresh</button>
+      <div class="notif-actions">
+        <button id="enable-notif-btn" class="btn-notif" onclick="requestDethroneNotifications()">Allow Notifications</button>
+        <button class="btn-notif-secondary" onclick="simulateDethrone()">Preview Alert</button>
       </div>
+    </div>
 
-      <div class="lb-list" id="leaderboardList">
-        <p style="text-align: center; color: var(--text-muted); padding: 20px;">Loading leaderboard...</p>
-      </div>
-
-      <button class="btn btn-primary" style="margin-top: 18px;" onclick="switchTab('quiz')">Back to 20-Q Quiz</button>
-    </section>
-
-    <!-- =================================================================== -->
-    <!-- MODE 2: LIVE WORD SEARCH PUZZLE CHALLENGE (ADMIN CONTROLLED)        -->
-    <!-- =================================================================== -->
-
-    <!-- VIEW 2A: WORD SEARCH LOBBY / GATEKEEPER -->
-    <section class="card hidden" id="viewWsLobby">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <h2 class="form-title" style="margin-bottom: 0;">Live Word Search Challenge</h2>
-        <button class="lb-refresh-btn" onclick="checkWordSearchPortalStatus(true)">↻ Check Status</button>
-      </div>
-      <p class="form-subtitle" id="wsLobbySubtitle">
-        Find all hidden Islamic & Ahmadiyya words inside the letter grid in the shortest time!
-      </p>
-
-      <!-- CLOSED STATE -->
-      <div id="wsClosedPanel" class="ws-lock-box">
-        <div class="ws-lock-icon">🔒</div>
-        <h3 style="color: var(--dark-blue); margin-bottom: 6px;">Round Currently Locked</h3>
-        <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 440px; margin: 0 auto 16px; line-height: 1.5;">
-          The Word Search Challenge is opened at special intervals during the program by the Exhibition Admin. Listen for the announcement, then tap <strong>Check Status</strong>!
-        </p>
-        <button type="button" class="btn btn-primary" style="max-width: 240px;" onclick="checkWordSearchPortalStatus(true)">
-          Refresh Portal Status
-        </button>
-      </div>
-
-      <!-- OPEN STATE (REGISTRATION FORM) -->
-      <div id="wsOpenPanel" class="hidden">
-        <div style="background: var(--success-bg); border: 1px solid #86EFAC; color: var(--success); padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 0.88rem; margin-bottom: 16px; text-align: center;" id="wsLiveBannerText">
-          🟢 LIVE ROUND IS OPEN! Enter your details to join the race!
-        </div>
-
-        <form id="wsRegisterForm" onsubmit="handleStartWordSearch(event)">
-          <div class="form-group">
-            <label for="wsFullName">Full Name *</label>
-            <input type="text" id="wsFullName" placeholder="e.g., Ahmad Muhammad Kwame" required />
-          </div>
-
-          <div class="form-group">
-            <label for="wsEmail">Email Address *</label>
-            <input type="email" id="wsEmail" placeholder="e.g., ahmad@gmail.com" required />
-          </div>
-
-          <div class="form-group">
-            <label for="wsProfession">Profession or Field of Study *</label>
-            <input type="text" id="wsProfession" placeholder="e.g., Medical Student, Missionary, Engineer, Student" required />
-          </div>
-
-          <button type="submit" class="btn btn-primary" id="startWsBtn">Enter Puzzle Grid Now →</button>
-        </form>
-      </div>
-    </section>
-
-    <!-- VIEW 2B: ACTIVE WORD SEARCH BOARD -->
-    <section class="card hidden" id="viewWsBoard">
-      <div class="quiz-status-bar">
-        <span class="progress-badge" id="wsFoundCounter">Found: 0 / 20 Words</span>
-        <span class="timer-badge" id="wsTimerDisplay">00:00</span>
-      </div>
-
-      <p style="font-size: 0.82rem; color: var(--text-muted); text-align: center; margin-bottom: 10px;">
-        <strong>How to select:</strong> Drag across letters (or tap the <strong>first letter</strong> then tap the <strong>last letter</strong> of a word).
-      </p>
-
-      <div class="ws-grid-wrapper">
-        <div class="ws-grid" id="wsGridContainer"></div>
-      </div>
-
-      <div class="ws-word-bank-title">
-        <span id="wsTargetWordsHeader">Search for these hidden words:</span>
-        <button type="button" class="btn-danger-outline" style="padding: 4px 10px; font-size: 0.76rem;" onclick="clearCurrentWsSelection()">Clear Tap</button>
-      </div>
-
-      <div class="ws-word-list" id="wsWordListContainer"></div>
-    </section>
-
-    <!-- VIEW 2C: WORD SEARCH RESULTS -->
-    <section class="card hidden" id="viewWsResults">
-      <div class="result-banner">
-        <div class="result-score-circle" style="border-color: var(--success); background: var(--success-bg);">
-          <span class="pct" id="wsResPct" style="color: var(--success);">20/20</span>
-          <span class="lbl" style="color: var(--success);">Completed</span>
-        </div>
-        <h2 class="form-title" id="wsResPlayerName">Masha'Allah!</h2>
-        <p class="form-subtitle" id="wsResPlayerProf" style="margin-bottom: 0;"></p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="val" id="wsResFound">20 / 20</div>
-          <div class="key">Words Found</div>
-        </div>
-        <div class="stat-box">
-          <div class="val" id="wsResTime">00:00</div>
-          <div class="key">Completion Time</div>
-        </div>
-      </div>
-
-      <p id="wsSaveStatusMsg" style="text-align: center; font-size: 0.88rem; color: var(--primary-blue); font-weight: 600; margin-bottom: 16px;">
-        Recording your speed on the Puzzle Leaderboard...
-      </p>
-
-      <button class="btn btn-primary" onclick="switchTab('wsLb')">View Word Puzzle Top 10</button>
-      <button class="btn btn-secondary" onclick="switchTab('wordSearch')">Back to Puzzle Lobby</button>
-    </section>
-
-    <!-- VIEW 2D: WORD SEARCH TOP 10 LEADERBOARD -->
-    <section class="card hidden" id="viewWsLeaderboard">
-      <div class="lb-header">
-        <div>
-          <h2 class="form-title" style="margin-bottom: 2px;">Word Puzzle Top 10</h2>
-          <p style="font-size: 0.82rem; color: var(--text-muted);">Ranked by Most Words Found, then Fastest Time</p>
-        </div>
-        <button class="lb-refresh-btn" onclick="loadWsLeaderboard()">↻ Refresh</button>
-      </div>
-
-      <div class="lb-list" id="wsLeaderboardList">
-        <p style="text-align: center; color: var(--text-muted); padding: 20px;">Loading puzzle leaderboard...</p>
-      </div>
-
-      <button class="btn btn-primary" style="margin-top: 18px;" onclick="switchTab('wordSearch')">Back to Word Puzzle</button>
-    </section>
-
-    <!-- =================================================================== -->
-    <!-- ADMIN PORTAL VIEWS                                                  -->
-    <!-- =================================================================== -->
-
-    <!-- VIEW 5: ADMIN LOGIN -->
-    <section class="card hidden" id="viewAdminLogin">
-      <h2 class="form-title">Admin Portal Login</h2>
-      <p class="form-subtitle">
-        Enter the Admin Access PIN to manage Quiz Sets/Banks, Word Puzzle modes, or view leaderboards.
-      </p>
-
-      <form onsubmit="handleAdminLogin(event)">
-        <div class="form-group">
-          <label for="adminPinInput">Admin Access PIN *</label>
-          <input type="password" id="adminPinInput" placeholder="e.g. secret code" required />
-        </div>
-
-        <p id="adminLoginError" style="color: var(--danger); font-size: 0.86rem; font-weight: 600; margin-bottom: 12px;"></p>
-
-        <button type="submit" class="btn btn-primary">Sign In as Admin</button>
-        <button type="button" class="btn btn-secondary" onclick="exitAdminView()">← Back to Public Hub</button>
-      </form>
-    </section>
-
-    <!-- VIEW 6: ADMIN DASHBOARD -->
-    <section class="card hidden" id="viewAdminDashboard">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <div>
-          <h2 class="form-title" style="margin-bottom: 2px;">Admin Dashboard</h2>
-          <p style="font-size: 0.82rem; color: var(--primary-blue); font-weight: 600;">Logged in as: Administrator</p>
-        </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-          <button type="button" class="btn btn-success" style="width:auto; padding:8px 14px; font-size:0.84rem;" onclick="launchPublicTvDisplay()">
-            📺 Launch Public Big Screen
-          </button>
-          <button class="btn-danger-outline" onclick="logoutAdmin()">Logout</button>
-        </div>
-      </div>
-
-      <!-- Admin Sub-Tabs -->
-      <div class="admin-subtabs">
-        <button class="admin-subtab active" id="subtabQuizControl" onclick="switchAdminSubtab('quizControl')">Quiz Control & Sets</button>
-        <button class="admin-subtab" id="subtabWsControl" onclick="switchAdminSubtab('wsControl')">Word Puzzle Control</button>
-        <button class="admin-subtab" id="subtabAddSingle" onclick="switchAdminSubtab('single')">+ Quiz Question</button>
-        <button class="admin-subtab" id="subtabManageQ" onclick="switchAdminSubtab('manageQ')">All Questions (<span id="totalQCount">0</span>)</button>
-        <button class="admin-subtab" id="subtabFullLb" onclick="switchAdminSubtab('fullLb')">Leaderboards</button>
-        <button class="admin-subtab" id="subtabTvSettings" onclick="switchAdminSubtab('tvSettings')">📺 Public Display</button>
-      </div>
-
-      <!-- ADMIN PANEL 1: QUIZ LIVE CONTROL & 3 DOCUMENT SETS -->
-      <div id="adminPanelQuizControl">
-        <div class="ws-control-card">
-          <strong style="color: var(--dark-blue); font-size: 1rem;">Active Live Quiz Set (Hidden from Players):</strong>
-          <p style="font-size: 0.84rem; color: var(--text-dark); margin: 6px 0 12px; line-height: 1.4;">
-            Choose which Question Set goes live when players start the quiz. Players will never see the difficulty or set label—only the questions!
-          </p>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="quizBankSelectorButtons">
-            <button type="button" class="btn btn-primary" style="flex:1; min-width:130px;" id="btnActivateBank1" onclick="setActiveQuizBank(1)">Set 1 (Easy)</button>
-            <button type="button" class="btn btn-primary" style="flex:1; min-width:130px;" id="btnActivateBank2" onclick="setActiveQuizBank(2)">Set 2 (Medium)</button>
-            <button type="button" class="btn btn-primary" style="flex:1; min-width:130px;" id="btnActivateBank3" onclick="setActiveQuizBank(3)">Set 3 (Hard)</button>
-            <button type="button" class="btn btn-secondary" style="flex:1; min-width:130px; margin-top:0;" id="btnActivateBank0" onclick="setActiveQuizBank(0)">Mix All Sets</button>
-          </div>
-          <p id="currentActiveQuizBankMsg" style="margin-top: 10px; font-weight: 700; font-size: 0.86rem; color: var(--success);"></p>
-        </div>
-
-        <h3 style="font-size: 1rem; color: var(--dark-blue); margin-bottom: 8px;">Upload Word (.docx) Files into Your 3 Question Sets</h3>
-        <div class="format-guide">
-          <strong>Format for each .docx file:</strong> Numbered question followed by options A, B, C, D with an asterisk <strong>*</strong> on the correct option (or put the correct answer first as A).
-          <pre>1. Who launched the blessed scheme of Waqf-e-Nau?
-A. Hazrat Mirza Tahir Ahmad (rh) *
-B. Hazrat Mirza Masroor Ahmad (aba)
-C. Hazrat Mirza Nasir Ahmad (rh)
-D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
-        </div>
-
-        <!-- 3 Upload Slots for the 3 Sets -->
-        <div class="bank-card" id="bankCard1">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <strong style="color:var(--dark-blue);">📁 Set 1 (e.g., Easy / Kids / General)</strong>
-            <span class="badge-pill" id="countBank1">0 Questions</span>
-          </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <input type="file" accept=".docx" onchange="handleBankDocxUpload(event, 1)" style="flex:1; font-size:0.85rem;" />
-            <button type="button" class="btn-danger-outline" onclick="clearQuizBank(1)">Clear Set 1</button>
-          </div>
-        </div>
-
-        <div class="bank-card" id="bankCard2">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <strong style="color:var(--dark-blue);">📁 Set 2 (e.g., Medium / Youth)</strong>
-            <span class="badge-pill" id="countBank2">0 Questions</span>
-          </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <input type="file" accept=".docx" onchange="handleBankDocxUpload(event, 2)" style="flex:1; font-size:0.85rem;" />
-            <button type="button" class="btn-danger-outline" onclick="clearQuizBank(2)">Clear Set 2</button>
-          </div>
-        </div>
-
-        <div class="bank-card" id="bankCard3">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <strong style="color:var(--dark-blue);">📁 Set 3 (e.g., Hard / Scholars)</strong>
-            <span class="badge-pill" id="countBank3">0 Questions</span>
-          </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <input type="file" accept=".docx" onchange="handleBankDocxUpload(event, 3)" style="flex:1; font-size:0.85rem;" />
-            <button type="button" class="btn-danger-outline" onclick="clearQuizBank(3)">Clear Set 3</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ADMIN PANEL 2: WORD PUZZLE LIVE CONTROL, GRID MODES & CUSTOM WORD COUNT -->
-      <div id="adminPanelWsControl" class="hidden">
-        <div class="ws-control-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-            <div>
-              <strong style="color: var(--dark-blue); font-size: 1rem;">Word Search Portal Status:</strong>
-              <span id="adminWsStatusBadge" class="status-pill closed" style="margin-left: 6px;">LOCKED</span>
-            </div>
-            <span id="adminWsRoundLabel" style="font-size: 0.82rem; font-weight: 700; color: var(--primary-blue);">Round #1</span>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label for="adminGridModeSelect"><strong>1. Select Puzzle Board Difficulty / Grid Size Mode:</strong></label>
-            <select id="adminGridModeSelect" onchange="renderAdminWordChecklist()">
-              <option value="10">Mode 1: Easy — Small Board (10 × 10 Grid, max 10-letter words)</option>
-              <option value="12">Mode 2: Medium — Standard Board (12 × 12 Grid, max 12-letter words)</option>
-              <option value="15" selected>Mode 3: Hard — Large Board (15 × 15 Grid, up to 13-letter words)</option>
-            </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 14px;">
-            <label for="adminCustomWordCountInput"><strong>2. Type Number of Words for this Round (Editable):</strong></label>
-            <input type="number" id="adminCustomWordCountInput" min="1" max="50" value="15" placeholder="Type any number e.g. 8, 12, 16, 20" />
-          </div>
-
-          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 6px;">
-            <button type="button" class="btn btn-success" style="flex: 1; min-width: 180px;" id="btnOpenWsRound" onclick="adminOpenNewWordSearchRound()">
-              🟢 Open Portal & Start New Round
-            </button>
-            <button type="button" class="btn btn-primary" style="flex: 1; min-width: 150px; background: var(--danger);" id="btnCloseWsRound" onclick="adminCloseWordSearchRound()">
-              🔒 Lock / Close Portal
-            </button>
-          </div>
-        </div>
-
-        <!-- Word Selection Checklist Container -->
-        <div style="margin-bottom: 18px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-            <strong style="font-size: 0.92rem; color: var(--dark-blue);">3. Select Specific Words for Current Round (<span id="selectedWordsCountBadge">0</span> Selected):</strong>
-            <div style="display: flex; gap: 6px;">
-              <button type="button" class="lb-refresh-btn" onclick="adminSelectAllWords(true)">Select All Valid</button>
-              <button type="button" class="lb-refresh-btn" onclick="adminSelectAllWords(false)">Deselect All</button>
-            </div>
-          </div>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;">
-            Only words that fit inside your chosen grid size are enabled. Check the exact words you want included in the round.
-          </p>
-          <div id="adminWordChecklistGrid" style="max-height: 220px; overflow-y: auto; background: var(--off-white); padding: 12px; border-radius: 10px; border: 1px solid #E2E8F0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;"></div>
-        </div>
-
-        <h3 style="font-size: 1rem; color: var(--dark-blue); margin-bottom: 8px;">Add New Words to Word Bank</h3>
-        <form onsubmit="handleAddPuzzleWords(event)" style="margin-bottom: 16px;">
-          <div class="form-group">
-            <label>Enter new words (Letters only, 3–13 letters long, separated by commas or new lines)</label>
-            <textarea id="newPuzzleWordsInput" rows="2" placeholder="e.g., KHILAFAT, QADIAN, RABWAH, TAHIR" required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary" id="saveWsWordsBtn">Add Words to Bank</button>
-        </form>
-      </div>
-
-      <!-- ADMIN PANEL 3: ADD SINGLE QUESTION -->
-      <div id="adminPanelSingle" class="hidden">
-        <form onsubmit="handleAddSingleQuestion(event)">
-          <div class="form-group">
-            <label>Assign to Question Set *</label>
-            <select id="newQBankSelect">
-              <option value="1">Set 1 (Easy)</option>
-              <option value="2">Set 2 (Medium)</option>
-              <option value="3">Set 3 (Hard)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Question Text *</label>
-            <textarea id="newQText" rows="2" placeholder="Type your question here..." required></textarea>
-          </div>
-          <div class="form-group">
-            <label style="color: var(--success);">Option 1 — CORRECT ANSWER * (Will be shuffled automatically in quiz)</label>
-            <input type="text" id="newQOpt0" placeholder="Enter the correct answer" required />
-          </div>
-          <div class="form-group">
-            <label>Option 2 (Wrong Answer) *</label>
-            <input type="text" id="newQOpt1" placeholder="Enter second option" required />
-          </div>
-          <div class="form-group">
-            <label>Option 3 (Wrong Answer) *</label>
-            <input type="text" id="newQOpt2" placeholder="Enter third option" required />
-          </div>
-          <div class="form-group">
-            <label>Option 4 (Wrong Answer) *</label>
-            <input type="text" id="newQOpt3" placeholder="Enter fourth option" required />
-          </div>
-          <button type="submit" class="btn btn-primary" id="saveSingleQBtn">Save Question to Live Bank</button>
-        </form>
-      </div>
-
-      <!-- ADMIN PANEL 4: VIEW / EDIT / DELETE ALL QUESTIONS -->
-      <div id="adminPanelManageQ" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-          <p style="font-size: 0.85rem; color: var(--text-muted);">
-            Every question (including starter questions) can be edited or removed.
-          </p>
-          <select id="filterAdminQBank" onchange="renderAdminQuestionsList()" style="padding:6px 10px; border-radius:8px; border:1px solid var(--border-color); font-size:0.84rem;">
-            <option value="all">Show All Sets</option>
-            <option value="1">Set 1 (Easy)</option>
-            <option value="2">Set 2 (Medium)</option>
-            <option value="3">Set 3 (Hard)</option>
-          </select>
-        </div>
-        <div id="adminQuestionsList" style="max-height: 440px; overflow-y: auto;"></div>
-      </div>
-
-
-      <!-- ADMIN PANEL 6: PUBLIC DISPLAY CUSTOMIZATION (SPEED MESSAGE & TOP N) -->
-      <div id="adminPanelTvSettings" class="hidden">
-        <div class="ws-control-card">
-          <strong style="color: var(--dark-blue); font-size: 1rem;">Customize Public Big Screen / Smart TV Display</strong>
-          <p style="font-size: 0.84rem; color: var(--text-dark); margin: 6px 0 14px; line-height: 1.45;">
-            Edit the "Survival of the Fastest" speed message and choose how many ranked players appear on each leaderboard (e.g., Top 5, Top 10, Top 15, Top 20) anytime during Jalsa.
-          </p>
-
-          <form onsubmit="handleSaveTvDisplaySettings(event)">
-            <div class="form-group">
-              <label for="adminTvSpeedTitleInput">Speed Banner Headline *</label>
-              <input
-                type="text"
-                id="adminTvSpeedTitleInput"
-                required
-                placeholder="⚡ SURVIVAL OF THE FASTEST — SPEED & ACCURACY BOTH COUNT!"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="adminTvSpeedMessageInput">Speed & Competition Message for Attendees *</label>
-              <textarea
-                id="adminTvSpeedMessageInput"
-                rows="3"
-                required
-                placeholder="Explain why finishing quickly and accurately matters..."
-              ></textarea>
-            </div>
-
-            <div class="form-group">
-              <label for="adminTvTopLimitInput">Number of Top Players Shown on Each Board (e.g., 10 for Top 10) *</label>
-              <input
-                type="number"
-                id="adminTvTopLimitInput"
-                min="1"
-                max="50"
-                value="10"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="adminTvQrUrlInput">QR Code Link (Join URL for Attendees) *</label>
-              <input
-                type="url"
-                id="adminTvQrUrlInput"
-                required
-                placeholder="https://waqf-e-nau.vercel.app/"
-              />
-            </div>
-
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-              <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 180px;" id="saveTvSettingsBtn">
-                Save Display Settings
-              </button>
-              <button type="button" class="btn btn-success" style="flex: 1; min-width: 180px;" onclick="launchPublicTvDisplay()">
-                📺 Launch Big Screen Now
-              </button>
-            </div>
-            <p id="tvSettingsSavedMsg" style="margin-top: 10px; font-weight: 700; font-size: 0.86rem; color: var(--success);"></p>
-          </form>
-        </div>
-      </div>
-
-            <!-- ADMIN PANEL 5: FULL LEADERBOARDS & RESET -->
-      <div id="adminPanelFullLb" class="hidden">
-        <div style="margin-bottom: 22px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 0.92rem; font-weight: 700; color: var(--dark-blue);">20-Q Quiz Participants</span>
-            <button type="button" class="btn-danger-outline" onclick="clearEntireLeaderboard()">Clear Quiz Scores</button>
-          </div>
-          <div id="adminFullLeaderboardList" style="max-height: 240px; overflow-y: auto;"></div>
-        </div>
-
-        <div style="border-top: 2px solid #E2E8F0; padding-top: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 0.92rem; font-weight: 700; color: var(--dark-blue);">Word Puzzle Participants</span>
-            <button type="button" class="btn-danger-outline" onclick="clearEntireWsLeaderboard()">Clear Puzzle Scores</button>
-          </div>
-          <div id="adminFullWsLeaderboardList" style="max-height: 240px; overflow-y: auto;"></div>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- =================================================================== -->
-    <!-- PUBLIC SMART TV / BIG SCREEN LIVE DISPLAY (24/7 AUTO-UPDATING)     -->
-    <!-- =================================================================== -->
-    <section class="tv-display-card hidden" id="viewPublicTvDisplay">
-      <div class="tv-topbar">
-        <div class="tv-brand">
-          <div class="tv-brand-logo">
-            <img
-              src="logo.png"
-              alt="Waqf-e-Nau Ghana Logo"
-              onerror="this.style.display='none';"
-            />
-          </div>
-          <div>
-            <div class="tv-title">Jalsa Salana Live Standings</div>
-            <div class="tv-subtitle">Waqf-e-Nau Ghana Exhibition — Real-Time Quiz & Word Puzzle Leaderboards</div>
-          </div>
-        </div>
-
-        <div class="tv-controls-right">
-          <span class="live-pulse-badge">
-            <span class="live-dot"></span>
-            <span>LIVE AUTO-SYNC</span>
-          </span>
-          <span id="tvLastUpdatedLabel" style="font-size:0.78rem; color:var(--text-muted); font-family:monospace;">Syncing...</span>
-          <button type="button" class="btn-edit-outline" onclick="exitPublicTvDisplayToAdmin()">← Back to Admin</button>
-        </div>
-      </div>
-
-      <!-- Survival of the Fastest / Speed Banner -->
-      <div class="tv-speed-banner">
-        <div style="flex:1; min-width:260px;">
-          <h3>⚡ SURVIVAL OF THE FASTEST — SPEED & ACCURACY BOTH COUNT!</h3>
+    <!-- ========================================== -->
+    <!-- VIEW 1: ACTIVE QUIZ PAGE (SETTING STAKES)  -->
+    <!-- ========================================== -->
+    <div id="quiz-view" class="hidden">
+      <div class="stakes-banner">
+        <div class="stakes-icon">🏆</div>
+        <div class="stakes-content">
+          <h3>Top 10 Leaderboard Challenge — Speed &amp; Accuracy Matter!</h3>
           <p>
-            Don't just aim to finish—<strong>aim to finish fast and accurately!</strong>
-            When scores or words found are equal, <strong>the fastest completion time takes the higher rank</strong>.
-            Every second matters in the Quiz and the Word Puzzle!
+            Rankings are determined by your <strong>total correct answers</strong> and <strong>completion speed</strong>. 
+            Once you claim a spot, a live timer tracks how long you hold your position before someone dethrones you!
           </p>
-        </div>
-        <div style="background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.28); padding:10px 14px; border-radius:12px; font-size:0.82rem; font-weight:700; color:#FDE68A;">
-          🏆 Top 10 Ranked Live<br/>
-          <span style="color:#FFFFFF; font-weight:600;">Updates automatically on every new score</span>
         </div>
       </div>
 
-      <div class="tv-main-grid">
-        <!-- Left Column: Quiz Leaderboard -->
-        <div class="tv-board-col">
-          <div class="tv-board-header">
-            <div>
-              <div class="tv-board-title">🧠 20-Q Quiz Top 10</div>
-              <div class="tv-board-sub">Highest Accuracy first • Fastest Time wins ties</div>
-            </div>
-            <span class="badge-pill" id="tvQuizCountBadge">0 Players</span>
-          </div>
-          <div class="lb-list" id="tvQuizLeaderboardList">
-            <p style="text-align:center;color:var(--text-muted);padding:20px;">Loading quiz standings...</p>
-          </div>
+      <div class="card">
+        <div class="quiz-header">
+          <span style="color: var(--text-muted); font-weight: 600;">Question 3 of 5</span>
+          <span class="timer-pill" id="live-quiz-timer">⏱ 00:14.2</span>
         </div>
 
-        <!-- Middle Column: Word Puzzle Leaderboard -->
-        <div class="tv-board-col">
-          <div class="tv-board-header">
-            <div>
-              <div class="tv-board-title">🧩 Word Puzzle Top 10</div>
-              <div class="tv-board-sub">Most Words Found first • Fastest Time wins ties</div>
-            </div>
-            <span class="badge-pill" id="tvWsCountBadge">0 Players</span>
-          </div>
-          <div class="lb-list" id="tvWsLeaderboardList">
-            <p style="text-align:center;color:var(--text-muted);padding:20px;">Loading puzzle standings...</p>
-          </div>
+        <div class="question-text">
+          Which factor determines who ranks higher when two participants get the exact same quiz score?
         </div>
 
-        <!-- Right Column: QR Code Join Panel -->
-        <div class="tv-qr-panel">
-          <div style="font-weight:900; font-size:1rem; color:var(--dark-blue);">📱 Scan to Play Live!</div>
-          <p style="font-size:0.8rem; color:var(--text-dark); line-height:1.4;">
-            Point your phone camera at this QR code to open the Quiz & Word Puzzle immediately.
-          </p>
-          <div class="tv-qr-box" id="tvQrCodeContainer"></div>
-          <div class="tv-qr-url" id="tvQrUrlText"></div>
-          <div style="font-size:0.74rem; color:var(--text-muted); line-height:1.35;">
-            Works on iPhone, Android, tablets & laptops.
-          </div>
+        <div class="options-grid">
+          <button class="option-btn" onclick="renderResultState('outside')">A) Alphabetical order of their username</button>
+          <button class="option-btn" onclick="renderResultState('outside')">B) Faster completion speed (time taken)</button>
+          <button class="option-btn" onclick="renderResultState('outside')">C) Whoever joined the website first</button>
+          <button class="option-btn" onclick="renderResultState('outside')">D) Random selection</button>
         </div>
       </div>
-    </section>
 
-    <!-- EDIT QUESTION MODAL -->
-    <div id="editQuestionModal" class="modal-overlay hidden">
-      <div class="modal-box">
-        <h3 class="form-title" style="margin-bottom: 12px;">Edit Question</h3>
-        <form onsubmit="saveEditedQuestion(event)">
-          <input type="hidden" id="editQId" />
-          <div class="form-group">
-            <label>Question Set *</label>
-            <select id="editQBank">
-              <option value="1">Set 1 (Easy)</option>
-              <option value="2">Set 2 (Medium)</option>
-              <option value="3">Set 3 (Hard)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Question Text *</label>
-            <textarea id="editQText" rows="2" required></textarea>
-          </div>
-          <div class="form-group">
-            <label style="color: var(--success);">Correct Answer *</label>
-            <input type="text" id="editQOpt0" required />
-          </div>
-          <div class="form-group">
-            <label>Wrong Option 2 *</label>
-            <input type="text" id="editQOpt1" required />
-          </div>
-          <div class="form-group">
-            <label>Wrong Option 3 *</label>
-            <input type="text" id="editQOpt2" required />
-          </div>
-          <div class="form-group">
-            <label>Wrong Option 4 *</label>
-            <input type="text" id="editQOpt3" required />
-          </div>
-          <div style="display:flex; gap:10px; margin-top:14px;">
-            <button type="submit" class="btn btn-primary" id="saveEditQBtn">Save Changes</button>
-            <button type="button" class="btn btn-secondary" style="margin-top:0;" onclick="closeEditQuestionModal()">Cancel</button>
-          </div>
-        </form>
+      <!-- Mini Top 3 Preview on Quiz Page with Hold Timers -->
+      <div class="card">
+        <div class="section-title">
+          <span>🔥 Current Top 3 &amp; Reign Duration</span>
+          <span style="font-size: 0.82rem; color: var(--text-muted);">500 Participants</span>
+        </div>
+        <div class="table-wrapper">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Participant</th>
+                <th>Score</th>
+                <th>Speed</th>
+                <th>Holding Spot For</th>
+              </tr>
+            </thead>
+            <tbody id="mini-leaderboard-body">
+              <!-- Populated live via JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Footer with Discreet Admin Button -->
-    <div class="footer-bar">
-      <div class="mode-banner" id="connectionModeBanner"></div>
-      <button type="button" class="admin-link-btn" onclick="openAdminPortal()">Admin Portal</button>
+    <!-- ========================================== -->
+    <!-- VIEW 2: RESULTS & LEADERBOARD SCREEN       -->
+    <!-- ========================================== -->
+    <div id="results-view">
+      <!-- 1. Hero Congratulations, Standing & Dynamic Try Again CTA -->
+      <div class="card result-hero">
+        <div id="rank-badge" class="badge-rank">POSITION #18 OF 500</div>
+        <h1 id="congrats-heading" class="congrats-title">Well done, Alex! 👏</h1>
+        <p id="standing-text" class="standing-callout">
+          You finished at <strong>#18</strong> out of <strong>500</strong> participants.
+        </p>
+
+        <!-- Live Position Hold Timer Pill (Shown when user is in Top 10) -->
+        <div id="user-reign-banner" class="reign-banner hidden">
+          <span class="pulse-dot"></span>
+          <span id="user-reign-text">Holding #9 for 0s — defend your spot!</span>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-label">Your Rank</div>
+            <div class="stat-value" id="stat-rank">#18 / 500</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Accuracy</div>
+            <div class="stat-value" id="stat-score">3 / 5</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Quiz Speed</div>
+            <div class="stat-value" id="stat-time">34.2s</div>
+          </div>
+        </div>
+
+        <div id="encouragement-copy" class="encouragement-box">
+          You're not in the Top 10 yet, but you're close! Look at #1 on the leaderboard—they've been holding that spot for over <strong>10 hours</strong> unchallenged. Review what you missed below and <strong>try again</strong> to break into the <strong>Top 10</strong>!
+        </div>
+
+        <button id="try-again-btn" class="cta-primary" onclick="showView('quiz')">
+          Try Again to Enter the Top 10
+        </button>
+        <span class="best-score-note">✓ You can play as many times as you like — your highest rank is always saved.</span>
+      </div>
+
+      <!-- 2. What You Got Wrong (Review Section) -->
+      <div class="card">
+        <div class="section-title">
+          <span>📋 Review What You Missed</span>
+          <span id="missed-count" style="font-size: 0.85rem; color: var(--text-muted);">2 Questions</span>
+        </div>
+        <div id="wrong-answers-container">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- 3. Top 10 Leaderboard with Live Hold Timer -->
+      <div class="card">
+        <div class="section-title">
+          <span>🏆 Top 10 Leaderboard</span>
+          <span style="font-size: 0.82rem; color: var(--text-muted);">Live Reign Timer Active</span>
+        </div>
+        <div class="table-wrapper">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Participant</th>
+                <th>Score</th>
+                <th>Speed</th>
+                <th>Holding Spot For</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    // =========================================================================
-    // 1. SUPABASE & ADMIN CONFIGURATION
-    // =========================================================================
-    const SUPABASE_URL = "https://bwnnmsicsclwekpkyuez.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_BCNISL4k2zwKbhSfCjKQUg_o83RyeNz";
+    const totalParticipants = 500;
+    let currentScenarioKey = 'outside';
+    let userClaimedTimestamp = Date.now();
+    let notificationsEnabled = false;
 
-    const ADMIN_ACCESS_PIN = "Jalsa 2026";
-
-    let supabaseClient = null;
-    const isSupabaseConfigured =
-      SUPABASE_URL.startsWith("https://") && SUPABASE_ANON_KEY.length > 20;
-
-    if (isSupabaseConfigured && window.supabase) {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      document.getElementById("connectionModeBanner").textContent =
-        "Connected to Live Jalsa Salana Cloud Database";
-    } else {
-      document.getElementById("connectionModeBanner").textContent =
-        "Local Preview Mode";
-    }
-
-    // =========================================================================
-    // 2. STARTER QUESTIONS (AUTO-SEEDED TO DB SO ALL CAN BE EDITED/DELETED)
-    // =========================================================================
-    const INITIAL_SEED_QUESTIONS = [
-      {
-        q: "Who launched the blessed scheme of Waqf-e-Nau?",
-        options: [
-          "Hazrat Mirza Tahir Ahmad (rh)",
-          "Hazrat Mirza Masroor Ahmad (aba)",
-          "Hazrat Mirza Nasir Ahmad (rh)",
-          "Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)"
-        ],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "In which year was the Waqf-e-Nau scheme launched?",
-        options: ["1987", "1989", "1985", "1992"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "What does the Arabic term 'Waqf-e-Nau' literally mean?",
-        options: ["New Dedication", "Sacred Promise", "Servants of Peace", "Youth of Islam"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "When are children dedicated under the Waqf-e-Nau scheme?",
-        options: ["Before they are born", "At age 7", "At age 15", "Upon graduating university"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "What is the primary purpose of a Waqif-e-Nau?",
-        options: [
-          "To dedicate their life to the service of Islam, the Jama'at, and humanity",
-          "To become a politician",
-          "To travel around the world",
-          "To run a private business"
-        ],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "Who is the current Worldwide Head (Khalifatul Masih V) of the Ahmadiyya Muslim Community?",
-        options: [
-          "Hazrat Mirza Masroor Ahmad (aba)",
-          "Hazrat Mirza Tahir Ahmad (rh)",
-          "Hazrat Hakim Maulvi Nur-ud-Din (ra)",
-          "Hazrat Mirza Ghulam Ahmad (as)"
-        ],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "In which year did Hazrat Mirza Masroor Ahmad (aba) serve in Ghana before his Khilafat?",
-        options: ["1977 to 1985", "1990 to 1995", "1965 to 1970", "2000 to 2003"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "What is the famous motto of the Ahmadiyya Muslim Community?",
-        options: ["Love for All, Hatred for None", "Peace Through Justice", "Faith, Unity, Discipline", "Service Before Self"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "In which year was the Ahmadiyya Muslim Community founded?",
-        options: ["1889", "1901", "1835", "1908"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "Where was the Promised Messiah, Hazrat Mirza Ghulam Ahmad (as), born?",
-        options: ["Qadian, India", "Rabwah, Pakistan", "Lahore, Pakistan", "Delhi, India"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "What does 'Jalsa Salana' mean?",
-        options: ["Annual Gathering", "Festival of Sacrifice", "Day of Unity", "Peace Conference"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "Who started the first Jalsa Salana in 1891?",
-        options: [
-          "Hazrat Mirza Ghulam Ahmad (as)",
-          "Hazrat Khalifatul Masih I (ra)",
-          "Hazrat Khalifatul Masih II (ra)",
-          "Hazrat Khalifatul Masih III (rh)"
-        ],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "What is the first Surah (chapter) of the Holy Qur'an?",
-        options: ["Surah Al-Fatihah", "Surah Al-Baqarah", "Surah Al-Ikhlas", "Surah An-Nas"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "How many Surahs (chapters) are there in the Holy Qur'an?",
-        options: ["114", "110", "120", "99"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "Which magazine is published specifically for Waqifeen-e-Nau?",
-        options: ["Ismail & Maryam", "The Review of Religions", "Al-Fazl", "Tariq"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "Which auxiliary organization is for Ahmadi Muslim boys aged 7 to 15?",
-        options: ["Majlis Atfal-ul-Ahmadiyya", "Majlis Khuddam-ul-Ahmadiyya", "Majlis Ansarullah", "Lajna Ima'illah"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "Which auxiliary organization is for Ahmadi Muslim men aged 15 to 40?",
-        options: ["Majlis Khuddam-ul-Ahmadiyya", "Majlis Ansarullah", "Majlis Atfal-ul-Ahmadiyya", "Nasirat-ul-Ahmadiyya"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "Which auxiliary organization is for Ahmadi Muslim women aged 15 and above?",
-        options: ["Lajna Ima'illah", "Nasirat-ul-Ahmadiyya", "Majlis Ansarullah", "Waqf-e-Arzi"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "How many daily obligatory prayers (Salat) are prescribed in Islam?",
-        options: ["5", "3", "7", "4"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "In which city was the Holy Prophet Muhammad (sa) born?",
-        options: ["Makkah", "Madinah", "Jerusalem", "Ta'if"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "What is the name of the first Khalifa of the Ahmadiyya Muslim Community?",
-        options: [
-          "Hazrat Hakim Maulvi Nur-ud-Din (ra)",
-          "Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)",
-          "Hazrat Mirza Nasir Ahmad (rh)",
-          "Hazrat Mirza Tahir Ahmad (rh)"
-        ],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "Which project of the Ahmadiyya Muslim Community provides clean water, schools, and hospitals in Africa?",
-        options: ["MTA International", "Nusrat Jehan Scheme", "Waqf-e-Jadid", "Tehrik-e-Jadid"],
-        answer: 1,
-        bank: 1
-      },
-      {
-        q: "Which agricultural innovation did Hazrat Mirza Masroor Ahmad (aba) successfully pioneer while serving in Ghana?",
-        options: [
-          "Growing wheat in Ghana for the first time",
-          "Importing cocoa to Europe",
-          "Building the Akosombo Dam",
-          "Planting rubber trees in Accra"
-        ],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "What are the official colors of Waqf-e-Nau?",
-        options: ["Blue and White", "Green and Gold", "Black and White", "Red and White"],
-        answer: 0,
-        bank: 1
-      },
-      {
-        q: "What is the name of the global satellite television network of the Ahmadiyya Muslim Community?",
-        options: ["MTA International", "Peace TV", "Al-Islam TV", "Qadian Broadcasting"],
-        answer: 0,
-        bank: 1
-      }
+    const now = Date.now();
+    const baseLeaderboard = [
+      { rank: 1, name: "Kwame A.", score: "5 / 5", time: "18.4s", claimedAt: now - (10 * 3600 + 24 * 60 + 15) * 1000 },
+      { rank: 2, name: "Ama S.", score: "5 / 5", time: "21.0s", claimedAt: now - (4 * 3600 + 12 * 60 + 40) * 1000 },
+      { rank: 3, name: "David K.", score: "5 / 5", time: "23.7s", claimedAt: now - (1 * 3600 + 48 * 60 + 5) * 1000 },
+      { rank: 4, name: "Nana Y.", score: "5 / 5", time: "25.1s", claimedAt: now - (52 * 60 + 19) * 1000 },
+      { rank: 5, name: "Sarah M.", score: "5 / 5", time: "26.8s", claimedAt: now - (29 * 60 + 44) * 1000 },
+      { rank: 6, name: "Michael O.", score: "5 / 5", time: "28.3s", claimedAt: now - (14 * 60 + 10) * 1000 },
+      { rank: 7, name: "Esi T.", score: "4 / 5", time: "19.5s", claimedAt: now - (6 * 60 + 32) * 1000 },
+      { rank: 8, name: "Daniel B.", score: "4 / 5", time: "21.2s", claimedAt: now - (2 * 60 + 11) * 1000 },
+      { rank: 9, name: "Grace L.", score: "4 / 5", time: "22.9s", claimedAt: now - 45 * 1000 },
+      { rank: 10, name: "Kojo P.", score: "4 / 5", time: "24.6s", claimedAt: now - 8 * 1000 }
     ];
 
-    const STARTER_PUZZLE_WORDS = [
-      "WAQFENAU", "AHMADIYYA", "KHILAFAT", "QADIAN", "RABWAH", "MASROOR", "TAHIR", "NASIR",
-      "MAHMUD", "NURUDDIN", "GHULAM", "AHMAD", "MUHAMMAD", "ISLAM", "QURAN", "SALAT",
-      "ZAKAT", "SAWM", "HAJJ", "KALIMA", "TAUHID", "JAMAAT", "JALSA", "SALANA",
-      "GHANA", "ACCRA", "KUMASI", "TAMALE", "TAKORADI", "WAQF", "DEDICATION", "SERVICE",
-      "HUMANITY", "PEACE", "LOVE", "HATRED", "NONE", "KHUDDAM", "ATFAL", "ANSARULLAH",
-      "LAJNA", "NASIRAT", "ISMAIL", "MARYAM", "TARIQ", "ALFAZL", "MOSQUE", "MINARET",
-      "MUBARAK", "AQSA", "FAZL", "BAITUL", "FUTUH", "MAKKAH", "MADINAH", "KAABA",
-      "RAMADAN", "EIDULFITR", "EIDULADHA", "FATIHAH", "BAQARAH", "IKHLAS", "KAUTHAR", "NASR",
-      "ASR", "FAJR", "ZUHR", "MAGHRIB", "ISHA", "TAHAJJUD", "DUA", "ISTIGHFAR",
-      "DUROOD", "SADAQAH", "TABLIGH", "TARBIYYAT", "TALIM", "KHIDMAT", "UMMAH", "PROPHET",
-      "MESSIAH", "MAHDI", "REFORMER", "PROMISED", "BAIATH", "OBEDIENCE", "PRAYER", "FASTING",
-      "CHARITY", "PILGRIMAGE", "TRUTH", "JUSTICE", "LOYALTY", "FAITH", "WISDOM", "MERCY",
-      "BLESSING", "GUIDANCE", "LIGHT", "SUNNAH", "HADITH", "SAHABA", "COMPANION", "MISSIONARY",
-      "DEVOTION"
-    ];
-
-    let allQuestionsPool = [];
-    let activeQuizBank = 1; // 1, 2, 3, or 0 (all)
-    let allPuzzleWordsPool = [...STARTER_PUZZLE_WORDS];
-
-    async function syncQuestionBank() {
-      if (!supabaseClient) {
-        allQuestionsPool = INITIAL_SEED_QUESTIONS.map((item, idx) => ({
-          id: "local_" + idx,
-          q: item.q,
-          options: item.options,
-          answer: item.answer,
-          bank: item.bank
-        }));
-        updateBankCountsUI();
-        return;
+    const scenarios = {
+      outside: {
+        rank: 18,
+        score: "3 / 5",
+        time: "34.2s",
+        isTop10: false,
+        isDethroned: false,
+        badge: "POSITION #18 OF 500",
+        heading: "Well done, Alex! 👏",
+        standing: `You ranked <strong>#18</strong> out of <strong>${totalParticipants}</strong> participants.`,
+        encouragement: `You're not in the Top 10 yet, but you're close! Look at #1 on the leaderboard—they've been holding that spot for over <strong>10 hours</strong> unchallenged. Review what you missed below and <strong>try again</strong> to break into the <strong>Top 10</strong>!`,
+        cta: "Try Again to Enter the Top 10",
+        missed: [
+          {
+            question: "Q2. What is the chemical symbol for Gold?",
+            yourAnswer: "Ag",
+            correctAnswer: "Au"
+          },
+          {
+            question: "Q4. Which planet has the shortest day in our solar system?",
+            yourAnswer: "Mars",
+            correctAnswer: "Jupiter"
+          }
+        ]
+      },
+      top10: {
+        rank: 9,
+        score: "4 / 5",
+        time: "22.9s",
+        isTop10: true,
+        isDethroned: false,
+        badge: "🔥 TOP 10 FINISHER • #9 OF 500",
+        heading: "Well done, Alex! You made the Top 10! 🎉",
+        standing: `You just claimed <strong>#9</strong> out of <strong>${totalParticipants}</strong> participants.`,
+        encouragement: `Your live hold timer just started! Anyone playing right now can knock you out of #9 in seconds. Make sure notifications are on so you know if someone passes you—or <strong>try again</strong> now to climb toward <strong>#1</strong>.`,
+        cta: "Try Again to Climb Higher in Top 10",
+        missed: [
+          {
+            question: "Q4. Which planet has the shortest day in our solar system?",
+            yourAnswer: "Saturn",
+            correctAnswer: "Jupiter"
+          }
+        ]
+      },
+      first: {
+        rank: 1,
+        score: "5 / 5",
+        time: "17.9s",
+        isTop10: true,
+        isDethroned: false,
+        badge: "👑 #1 CHAMPION • OUT OF 500",
+        heading: "Incredible job, Alex! You dethroned #1! 🏆",
+        standing: `You just took the <strong>#1</strong> crown out of <strong>${totalParticipants}</strong> participants.`,
+        encouragement: `You ended Kwame A.'s 10-hour reign! Your champion clock is now ticking—keep notifications turned on so you get alerted the instant someone tries to steal #1!`,
+        cta: "Play Again to Beat Your Record",
+        missed: []
+      },
+      dethroned: {
+        rank: 11,
+        score: "4 / 5",
+        time: "22.9s",
+        isTop10: false,
+        isDethroned: true,
+        badge: "⚠️ DROPPED OUT OF TOP 10 • #11 OF 500",
+        heading: "You've Been Dethroned! ⚡",
+        standing: `<strong>Kofi M.</strong> just beat your speed and pushed you from <strong>#9</strong> to <strong>#11</strong> out of <strong>${totalParticipants}</strong>.`,
+        encouragement: `You held your Top 10 spot, and now someone just took it! Review the 1 question you missed below and <strong>try again right now</strong> to reclaim your spot on the leaderboard.`,
+        cta: "Reclaim My Top 10 Spot Now",
+        missed: [
+          {
+            question: "Q4. Which planet has the shortest day in our solar system?",
+            yourAnswer: "Saturn",
+            correctAnswer: "Jupiter"
+          }
+        ]
       }
+    };
 
-      // Sync active quiz bank setting
-      const { data: stateData } = await supabaseClient
-        .from("quiz_state")
-        .select("*")
-        .eq("id", 1)
-        .single();
-
-      if (stateData && typeof stateData.active_bank === "number") {
-        activeQuizBank = stateData.active_bank;
-      }
-
-      // Fetch questions
-      let { data, error } = await supabaseClient
-        .from("questions")
-        .select("*")
-        .order("id", { ascending: false });
-
-      // If database is completely empty and hasn't been seeded yet, seed initial starter questions so admin can edit/delete them!
-      if (!error && data && data.length === 0 && !localStorage.getItem("wn_seeded_v1")) {
-        const rowsToInsert = INITIAL_SEED_QUESTIONS.map((item) => ({
-          question_text: item.q,
-          options: item.options,
-          correct_index: item.answer,
-          bank_number: item.bank
-        }));
-        await supabaseClient.from("questions").insert(rowsToInsert);
-        localStorage.setItem("wn_seeded_v1", "true");
-
-        const res = await supabaseClient
-          .from("questions")
-          .select("*")
-          .order("id", { ascending: false });
-        data = res.data || [];
-      }
-
-      if (!error && data) {
-        allQuestionsPool = data.map((row) => ({
-          id: row.id,
-          q: row.question_text,
-          options: row.options,
-          answer: row.correct_index,
-          bank: row.bank_number || 1
-        }));
-      }
-
-      document.getElementById("totalQCount").textContent = allQuestionsPool.length;
-      updateBankCountsUI();
-    }
-
-    function updateBankCountsUI() {
-      const b1 = allQuestionsPool.filter((q) => q.bank === 1).length;
-      const b2 = allQuestionsPool.filter((q) => q.bank === 2).length;
-      const b3 = allQuestionsPool.filter((q) => q.bank === 3).length;
-
-      document.getElementById("countBank1").textContent = `${b1} Questions`;
-      document.getElementById("countBank2").textContent = `${b2} Questions`;
-      document.getElementById("countBank3").textContent = `${b3} Questions`;
-
-      ["bankCard1", "bankCard2", "bankCard3"].forEach((id) =>
-        document.getElementById(id).classList.remove("active-bank")
-      );
-      if (activeQuizBank === 1) document.getElementById("bankCard1").classList.add("active-bank");
-      if (activeQuizBank === 2) document.getElementById("bankCard2").classList.add("active-bank");
-      if (activeQuizBank === 3) document.getElementById("bankCard3").classList.add("active-bank");
-
-      const labels = {
-        1: "Set 1 (Easy)",
-        2: "Set 2 (Medium)",
-        3: "Set 3 (Hard)",
-        0: "All Sets Mixed"
-      };
-      document.getElementById("currentActiveQuizBankMsg").textContent =
-        `✓ Currently Live for Players: ${labels[activeQuizBank] || "Set 1"}`;
-    }
-
-    async function syncPuzzleWordsBank() {
-      if (!supabaseClient) return;
-      const { data, error } = await supabaseClient
-        .from("word_search_words")
-        .select("*")
-        .order("id", { ascending: false });
-
-      if (!error && data) {
-        const dbWords = data.map((r) => r.word.toUpperCase().replace(/[^A-Z]/g, ""));
-        const combined = new Set([...dbWords, ...STARTER_PUZZLE_WORDS]);
-        allPuzzleWordsPool = Array.from(combined).filter((w) => w.length >= 3 && w.length <= 13);
-      }
-    }
-
-    syncQuestionBank();
-    syncPuzzleWordsBank();
-
-    // =========================================================================
-    // 3. SHARED NAVIGATION & HELPERS
-    // =========================================================================
-    function shuffleArray(array) {
-      const copy = [...array];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    }
-
-    function formatTime(totalSec) {
-      const mins = Math.floor(totalSec / 60);
-      const secs = totalSec % 60;
-      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-    }
-
-    function hideAllViews() {
-      [
-        "viewRegister", "viewQuiz", "viewResults", "viewLeaderboard",
-        "viewWsLobby", "viewWsBoard", "viewWsResults", "viewWsLeaderboard",
-        "viewAdminLogin", "viewAdminDashboard", "viewPublicTvDisplay"
-      ].forEach((id) => document.getElementById(id).classList.add("hidden"));
-    }
-
-    function switchTab(tab) {
-      document.getElementById("mainNavTabs").classList.remove("hidden");
-      ["tabQuiz", "tabQuizLb", "tabWordSearch", "tabWsLb"].forEach((id) =>
-        document.getElementById(id).classList.remove("active")
-      );
-      hideAllViews();
-
-      if (tab === "quiz") {
-        document.getElementById("tabQuiz").classList.add("active");
-        if (activeQuestions.length > 0 && !quizCompleted) {
-          document.getElementById("viewQuiz").classList.remove("hidden");
-        } else if (quizCompleted) {
-          document.getElementById("viewResults").classList.remove("hidden");
-        } else {
-          document.getElementById("viewRegister").classList.remove("hidden");
+    // Request real Browser Notification Permission + update UI
+    async function requestDethroneNotifications() {
+      if ("Notification" in window) {
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission === "granted") {
+            activateNotificationUI("Browser & Device Push Alerts Active");
+            new Notification("🔔 Dethrone Alerts Activated!", {
+              body: "We'll alert you the moment another participant takes your leaderboard spot."
+            });
+            return;
+          }
+        } catch (e) {
+          // Fallback for sandboxed iframe environments where native browser prompt is restricted
         }
-      } else if (tab === "quizLb") {
-        document.getElementById("tabQuizLb").classList.add("active");
-        document.getElementById("viewLeaderboard").classList.remove("hidden");
-        loadLeaderboard();
-      } else if (tab === "wordSearch") {
-        document.getElementById("tabWordSearch").classList.add("active");
-        if (wsActive && !wsCompleted) {
-          document.getElementById("viewWsBoard").classList.remove("hidden");
-        } else if (wsCompleted) {
-          document.getElementById("viewWsResults").classList.remove("hidden");
-        } else {
-          document.getElementById("viewWsLobby").classList.remove("hidden");
-          checkWordSearchPortalStatus(false);
-        }
-      } else if (tab === "wsLb") {
-        document.getElementById("tabWsLb").classList.add("active");
-        document.getElementById("viewWsLeaderboard").classList.remove("hidden");
-        loadWsLeaderboard();
       }
+      // Fallback UI confirmation for preview environments
+      activateNotificationUI("Dethrone Alerts Enabled (Simulated)");
+      showPushToast(
+        "🔔 Alerts Turned On",
+        "You'll now receive an instant notification whenever another player overtakes your rank.",
+        "Got it"
+      );
     }
 
-    function escapeHtml(str) {
-      const div = document.createElement("div");
-      div.textContent = str;
-      return div.innerHTML;
+    function activateNotificationUI(statusTitle) {
+      notificationsEnabled = true;
+      const bar = document.getElementById("notif-bar");
+      bar.classList.add("enabled");
+      document.getElementById("notif-icon").textContent = "✅";
+      document.getElementById("notif-title").textContent = statusTitle;
+      document.getElementById("notif-desc").textContent =
+        "Your push token is registered. If someone beats your score or speed, you'll be notified immediately.";
+      const btn = document.getElementById("enable-notif-btn");
+      btn.textContent = "Notifications On ✓";
+      btn.style.background = "#334155";
+      btn.style.color = "#6ee7b7";
     }
 
-    // =========================================================================
-    // 4. MODE 1: 20-QUESTION QUIZ LOGIC
-    // =========================================================================
-    const QUESTIONS_PER_QUIZ = 20;
+    // Trigger simulated push notification & update leaderboard state to show position traded
+    function simulateDethrone() {
+      const elapsedSec = Math.max(2, Math.floor((Date.now() - userClaimedTimestamp) / 1000));
+      const reignText = elapsedSec >= 60
+        ? `${Math.floor(elapsedSec / 60)}m ${elapsedSec % 60}s`
+        : `${elapsedSec}s`;
 
-    let currentUser = { fullName: "", email: "", profession: "" };
-    let activeQuestions = [];
-    let wrongAnswersList = [];
-    let currentIndex = 0;
-    let selectedOptionIndex = null;
-    let score = 0;
-    let timerInterval = null;
-    let startTimeMs = 0;
-    let elapsedSeconds = 0;
-    let quizCompleted = false;
-
-    async function handleStartQuiz(event) {
-      event.preventDefault();
-      currentUser.fullName = document.getElementById("fullName").value.trim();
-      currentUser.email = document.getElementById("email").value.trim().toLowerCase();
-      currentUser.profession = document.getElementById("profession").value.trim();
-
-      if (!currentUser.fullName || !currentUser.email || !currentUser.profession) return;
-
-      const btn = document.getElementById("startQuizBtn");
-      btn.disabled = true;
-      btn.textContent = "Loading Questions...";
-      await syncQuestionBank();
-      btn.disabled = false;
-      btn.textContent = "Start 20-Question Quiz";
-
-      beginFreshQuizSession();
-    }
-
-    function beginFreshQuizSession() {
-      // Filter by activeQuizBank (1, 2, 3) unless activeQuizBank === 0
-      let pool =
-        activeQuizBank === 0
-          ? allQuestionsPool
-          : allQuestionsPool.filter((q) => q.bank === activeQuizBank);
-
-      // Fallback if selected set has 0 questions
-      if (pool.length === 0) {
-        pool = allQuestionsPool;
-      }
-
-      if (pool.length === 0) {
-        alert("No quiz questions are currently loaded. Please ask the Admin to add questions.");
-        return;
-      }
-
-      const count = Math.min(QUESTIONS_PER_QUIZ, pool.length);
-      const picked = shuffleArray(pool).slice(0, count);
-
-      activeQuestions = picked.map((item) => {
-        const correctText = item.options[item.answer];
-        const shuffledOptions = shuffleArray(item.options);
-        return {
-          q: item.q,
-          options: shuffledOptions,
-          answer: shuffledOptions.indexOf(correctText)
-        };
-      });
-
-      currentIndex = 0;
-      score = 0;
-      wrongAnswersList = [];
-      quizCompleted = false;
-      selectedOptionIndex = null;
-
-      hideAllViews();
-      document.getElementById("viewQuiz").classList.remove("hidden");
-
-      startTimer();
-      renderQuestion();
-    }
-
-    function restartWithNewQuestions() {
-      if (confirm("Restart now? You will get new random questions and your timer will reset.")) {
-        stopTimer();
-        beginFreshQuizSession();
-      }
-    }
-
-    function retakeQuizFromResults() {
-      stopTimer();
-      beginFreshQuizSession();
-    }
-
-    function startTimer() {
-      stopTimer();
-      startTimeMs = Date.now();
-      elapsedSeconds = 0;
-      document.getElementById("timerDisplay").textContent = "00:00";
-
-      timerInterval = setInterval(() => {
-        elapsedSeconds = Math.floor((Date.now() - startTimeMs) / 1000);
-        document.getElementById("timerDisplay").textContent = formatTime(elapsedSeconds);
-      }, 500);
-    }
-
-    function stopTimer() {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-    }
-
-    function renderQuestion() {
-      const total = activeQuestions.length;
-      const currentQ = activeQuestions[currentIndex];
-      selectedOptionIndex = null;
-
-      document.getElementById("questionCounter").textContent = `Question ${currentIndex + 1} of ${total}`;
-      document.getElementById("progressBar").style.width = `${((currentIndex + 1) / total) * 100}%`;
-      document.getElementById("questionText").textContent = currentQ.q;
-
-      const nextBtn = document.getElementById("nextBtn");
-      nextBtn.disabled = true;
-      nextBtn.textContent = currentIndex === total - 1 ? "Submit Quiz ✓" : "Next Question →";
-
-      const container = document.getElementById("optionsContainer");
-      container.innerHTML = "";
-      const letters = ["A", "B", "C", "D"];
-
-      currentQ.options.forEach((optText, idx) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "option-btn";
-        btn.innerHTML = `<span class="option-letter">${letters[idx]}</span><span>${escapeHtml(optText)}</span>`;
-        btn.onclick = () => selectOption(idx, btn);
-        container.appendChild(btn);
-      });
-    }
-
-    function selectOption(idx, clickedBtn) {
-      selectedOptionIndex = idx;
-      document.querySelectorAll(".option-btn").forEach((b) => b.classList.remove("selected"));
-      clickedBtn.classList.add("selected");
-      document.getElementById("nextBtn").disabled = false;
-    }
-
-    async function handleNextQuestion() {
-      if (selectedOptionIndex === null) return;
-
-      const currentQ = activeQuestions[currentIndex];
-
-      if (selectedOptionIndex === currentQ.answer) {
-        score++;
-      } else {
-        wrongAnswersList.push({
-          questionNumber: currentIndex + 1,
-          questionText: currentQ.q,
-          userAnswer: currentQ.options[selectedOptionIndex],
-          correctAnswer: currentQ.options[currentQ.answer]
+      // Fire native OS/Browser notification if permitted
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("⚠️ Your Spot Was Just Taken!", {
+          body: `Kofi M. (4/5 in 21.4s) just pushed you out of the Top 10 after your ${reignText} reign. Tap to win it back!`
         });
       }
 
-      if (currentIndex < activeQuestions.length - 1) {
-        currentIndex++;
-        renderQuestion();
-      } else {
-        await finishQuiz();
-      }
+      // Show realistic lock-screen/banner push toast inside the page
+      showPushToast(
+        "⚠️ Spot Taken! You dropped to #11",
+        `Kofi M. (4/5 in 21.4s) just overtook you after your ${reignText} hold. Play now to reclaim your Top 10 spot!`,
+        "Tap to Reclaim Spot →"
+      );
+
+      // Update leaderboard #9 slot to Kofi M. and switch user view to Dethroned (#11)
+      baseLeaderboard[8] = {
+        rank: 9,
+        name: "Kofi M.",
+        score: "4 / 5",
+        time: "21.4s",
+        claimedAt: Date.now()
+      };
+      renderResultState('dethroned');
     }
 
-    function renderMistakesReview() {
-      const container = document.getElementById("mistakesContainer");
-      container.innerHTML = "";
-
-      if (wrongAnswersList.length === 0) {
-        container.innerHTML = `
-          <div class="perfect-banner">
-            Masha'Allah! 100% Perfect Score — You didn't miss a single question!
-          </div>
-        `;
-        return;
-      }
-
-      let html = `
-        <div class="mistakes-section">
-          <div class="mistakes-title">
-            <span>Review Your Mistakes (${wrongAnswersList.length} Missed)</span>
-          </div>
+    function showPushToast(title, body, ctaText) {
+      const container = document.getElementById("push-toast-container");
+      const toast = document.createElement("div");
+      toast.className = "push-toast";
+      toast.onclick = () => {
+        toast.remove();
+        showView('quiz');
+      };
+      toast.innerHTML = `
+        <div class="push-toast-header">
+          <span>🏆 QUIZ LEADERBOARD • NOW</span>
+          <span>✕</span>
+        </div>
+        <div class="push-toast-title">${title}</div>
+        <div class="push-toast-body">${body}</div>
+        <span class="push-toast-cta">${ctaText}</span>
       `;
+      container.appendChild(toast);
 
-      wrongAnswersList.forEach((item) => {
-        html += `
-          <div class="mistake-card">
-            <div class="mistake-q">Q${item.questionNumber}: ${escapeHtml(item.questionText)}</div>
-            <div class="mistake-ans-wrong">✗ Your Answer: ${escapeHtml(item.userAnswer)}</div>
-            <div class="mistake-ans-correct">✓ Correct Answer: ${escapeHtml(item.correctAnswer)}</div>
-          </div>
-        `;
-      });
-
-      html += `</div>`;
-      container.innerHTML = html;
+      setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+      }, 7500);
     }
 
-    async function finishQuiz() {
-      stopTimer();
-      quizCompleted = true;
-      const total = activeQuestions.length;
-      const finalSeconds = Math.max(1, Math.floor((Date.now() - startTimeMs) / 1000));
-      const accuracy = Math.round((score / total) * 100);
+    function formatHoldDuration(claimedAtMs) {
+      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - claimedAtMs) / 1000));
+      const hours = Math.floor(elapsedSeconds / 3600);
+      const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+      const seconds = elapsedSeconds % 60;
 
-      hideAllViews();
-      document.getElementById("viewResults").classList.remove("hidden");
-
-      document.getElementById("resAccuracy").textContent = `${accuracy}%`;
-      document.getElementById("resPlayerName").textContent = currentUser.fullName;
-      document.getElementById("resPlayerProf").textContent = currentUser.profession;
-      document.getElementById("resScore").textContent = `${score} / ${total}`;
-      document.getElementById("resTime").textContent = formatTime(finalSeconds);
-
-      renderMistakesReview();
-
-      const statusMsg = document.getElementById("saveStatusMsg");
-      statusMsg.textContent = "Updating live Quiz leaderboard...";
-
-      const record = {
-        email: currentUser.email,
-        full_name: currentUser.fullName,
-        profession: currentUser.profession,
-        score: score,
-        total_questions: total,
-        accuracy: accuracy,
-        time_seconds: finalSeconds,
-        updated_at: new Date().toISOString()
-      };
-
-      if (supabaseClient) {
-        const { error } = await supabaseClient.from("leaderboard").upsert(record, { onConflict: "email" });
-        if (error) {
-          console.error("Supabase upsert error:", error);
-          statusMsg.textContent = "Saved locally (Check Supabase table permissions).";
-        } else {
-          statusMsg.textContent = "✓ Your result is live on the Quiz Top 10 leaderboard!";
-        }
-      }
-    }
-
-    async function loadLeaderboard() {
-      const listEl = document.getElementById("leaderboardList");
-      listEl.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">Fetching Top 10...</p>`;
-
-      if (!supabaseClient) return;
-
-      const { data, error } = await supabaseClient
-        .from("leaderboard")
-        .select("*")
-        .order("accuracy", { ascending: false })
-        .order("time_seconds", { ascending: true })
-        .limit(10);
-
-      if (error || !data || data.length === 0) {
-        listEl.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">No participants yet. Be the first to take the quiz!</p>`;
-        return;
-      }
-
-      listEl.innerHTML = "";
-      data.forEach((row, index) => {
-        const rank = index + 1;
-        const topClass = rank === 1 ? "top-1" : rank === 2 ? "top-2" : rank === 3 ? "top-3" : "";
-
-        const item = document.createElement("div");
-        item.className = `lb-item ${topClass}`;
-        item.innerHTML = `
-          <div class="lb-rank">${rank}</div>
-          <div class="lb-user">
-            <div class="lb-name">${escapeHtml(row.full_name)}</div>
-            <div class="lb-prof">${escapeHtml(row.profession)}</div>
-          </div>
-          <div class="lb-metrics">
-            <div class="lb-acc">${row.accuracy}%</div>
-            <div class="lb-time">⏱ ${formatTime(row.time_seconds)}</div>
-          </div>
-        `;
-        listEl.appendChild(item);
-      });
-    }
-
-    // =========================================================================
-    // 5. MODE 2: ADMIN-CONTROLLED WORD SEARCH PUZZLE (DYNAMIC GRID SIZE)
-    // =========================================================================
-    let currentGridSize = 15;
-    let wsPortalState = {
-      is_open: false,
-      round_number: 1,
-      active_words: [],
-      word_count: 15,
-      grid_size: 15
-    };
-
-    let wsUser = { fullName: "", email: "", profession: "" };
-    let wsGrid = [];
-    let wsTargetWords = [];
-    let wsFoundWords = new Set();
-    let wsFoundCells = new Set();
-    let wsTapStartCell = null;
-    let wsIsDragging = false;
-    let wsDragCells = [];
-    let wsActive = false;
-    let wsCompleted = false;
-    let wsTimerInterval = null;
-    let wsStartTimeMs = 0;
-
-    async function checkWordSearchPortalStatus(showAlertIfClosed) {
-      if (!supabaseClient) return;
-      const { data, error } = await supabaseClient
-        .from("word_search_state")
-        .select("*")
-        .eq("id", 1)
-        .single();
-
-      if (!error && data) {
-        wsPortalState = data;
-        currentGridSize = data.grid_size || 15;
-      }
-
-      const closedPanel = document.getElementById("wsClosedPanel");
-      const openPanel = document.getElementById("wsOpenPanel");
-
-      if (wsPortalState.is_open && wsPortalState.active_words && wsPortalState.active_words.length > 0) {
-        closedPanel.classList.add("hidden");
-        openPanel.classList.remove("hidden");
-        const count = wsPortalState.active_words.length;
-        document.getElementById("wsLobbySubtitle").innerHTML =
-          `Find all <strong>${count} hidden Islamic & Ahmadiyya words</strong> inside the <strong>${currentGridSize}×${currentGridSize}</strong> letter grid in the shortest time!`;
+      if (hours >= 1) {
+        return { label: `👑 ${hours}h ${minutes}m`, tierClass: "hold-legend" };
+      } else if (minutes >= 1) {
+        return { label: `⏳ ${minutes}m ${seconds}s`, tierClass: "hold-steady" };
       } else {
-        openPanel.classList.add("hidden");
-        closedPanel.classList.remove("hidden");
-        if (showAlertIfClosed) {
-          alert("The Word Search round is still locked. Wait for the Exhibition Admin to announce when the portal opens!");
-        }
+        return { label: `⚡ ${seconds}s (New!)`, tierClass: "hold-fresh" };
       }
     }
 
-    async function handleStartWordSearch(event) {
-      event.preventDefault();
-      wsUser.fullName = document.getElementById("wsFullName").value.trim();
-      wsUser.email = document.getElementById("wsEmail").value.trim().toLowerCase();
-      wsUser.profession = document.getElementById("wsProfession").value.trim();
-
-      if (!wsUser.fullName || !wsUser.email || !wsUser.profession) return;
-
-      const btn = document.getElementById("startWsBtn");
-      btn.disabled = true;
-      btn.textContent = "Verifying Round...";
-      await checkWordSearchPortalStatus(false);
-      btn.disabled = false;
-      btn.textContent = "Enter Puzzle Grid Now →";
-
-      if (!wsPortalState.is_open) {
-        alert("The Admin has just closed this round!");
-        return;
-      }
-
-      currentGridSize = wsPortalState.grid_size || 15;
-      wsTargetWords = wsPortalState.active_words
-        .map((w) => w.toUpperCase())
-        .filter((w) => w.length <= currentGridSize);
-
-      wsFoundWords = new Set();
-      wsFoundCells = new Set();
-      wsTapStartCell = null;
-      wsActive = true;
-      wsCompleted = false;
-
-      document.getElementById("wsTargetWordsHeader").textContent =
-        `Search for these ${wsTargetWords.length} hidden words (${currentGridSize}×${currentGridSize} Board):`;
-
-      buildWordSearchGrid(wsTargetWords, currentGridSize);
-      renderWordSearchBoard(currentGridSize);
-
-      hideAllViews();
-      document.getElementById("viewWsBoard").classList.remove("hidden");
-      startWsTimer();
-    }
-
-    function buildWordSearchGrid(words, gridSize) {
-      wsGrid = Array.from({ length: gridSize }, () => Array(gridSize).fill(""));
-      const directions = [
-        [0, 1],   // Horizontal Right
-        [1, 0],   // Vertical Down
-        [1, 1],   // Diagonal Down-Right
-        [-1, 1],  // Diagonal Up-Right
-        [0, -1],  // Horizontal Left
-        [-1, 0]   // Vertical Up
-      ];
-
-      const sortedWords = [...words].sort((a, b) => b.length - a.length);
-      const successfullyPlaced = [];
-
-      sortedWords.forEach((word) => {
-        let placed = false;
-        for (let attempt = 0; attempt < 350 && !placed; attempt++) {
-          const dir = directions[Math.floor(Math.random() * directions.length)];
-          const startR = Math.floor(Math.random() * gridSize);
-          const startC = Math.floor(Math.random() * gridSize);
-
-          const endR = startR + dir[0] * (word.length - 1);
-          const endC = startC + dir[1] * (word.length - 1);
-
-          if (endR < 0 || endR >= gridSize || endC < 0 || endC >= gridSize) continue;
-
-          let fits = true;
-          for (let i = 0; i < word.length; i++) {
-            const r = startR + dir[0] * i;
-            const c = startC + dir[1] * i;
-            const existing = wsGrid[r][c];
-            if (existing !== "" && existing !== word[i]) {
-              fits = false;
-              break;
-            }
-          }
-
-          if (fits) {
-            for (let i = 0; i < word.length; i++) {
-              const r = startR + dir[0] * i;
-              const c = startC + dir[1] * i;
-              wsGrid[r][c] = word[i];
-            }
-            placed = true;
-            successfullyPlaced.push(word);
-          }
-        }
-      });
-
-      // Keep only words that physically fit in the grid so puzzle is 100% solvable
-      wsTargetWords = successfullyPlaced;
-
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      for (let r = 0; r < gridSize; r++) {
-        for (let c = 0; c < gridSize; c++) {
-          if (wsGrid[r][c] === "") {
-            wsGrid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)];
-          }
-        }
-      }
-    }
-
-    function renderWordSearchBoard(gridSize) {
-      const gridEl = document.getElementById("wsGridContainer");
-      gridEl.innerHTML = "";
-
-      // Adjust cell sizing dynamically based on grid size (10, 12, or 15)
-      const cellMaxPx = gridSize === 10 ? 44 : gridSize === 12 ? 38 : 34;
-      gridEl.style.gridTemplateColumns = `repeat(${gridSize}, minmax(22px, ${cellMaxPx}px))`;
-
-      for (let r = 0; r < gridSize; r++) {
-        for (let c = 0; c < gridSize; c++) {
-          const cell = document.createElement("div");
-          cell.className = "ws-cell";
-          cell.dataset.r = r;
-          cell.dataset.c = c;
-          cell.textContent = wsGrid[r][c];
-
-          if (wsFoundCells.has(`${r},${c}`)) {
-            cell.classList.add("found");
-          }
-
-          cell.addEventListener("pointerdown", (e) => {
-            e.preventDefault();
-            handleCellPointerDown(r, c);
-          });
-          cell.addEventListener("pointerenter", () => {
-            if (wsIsDragging) handleCellPointerEnter(r, c);
-          });
-
-          gridEl.appendChild(cell);
-        }
-      }
-
-      gridEl.ontouchmove = (e) => {
-        if (!wsIsDragging) return;
-        const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        if (target && target.classList.contains("ws-cell")) {
-          const tr = parseInt(target.dataset.r, 10);
-          const tc = parseInt(target.dataset.c, 10);
-          handleCellPointerEnter(tr, tc);
-        }
-      };
-
-      window.onpointerup = () => {
-        if (wsIsDragging) {
-          wsIsDragging = false;
-          if (wsDragCells.length > 1) {
-            evaluateSelectedPath(wsDragCells);
-            clearSelectedHighlight();
-            wsTapStartCell = null;
-          }
-        }
-      };
-
-      renderWordBankChips();
-    }
-
-    function renderWordBankChips() {
-      const listEl = document.getElementById("wsWordListContainer");
-      listEl.innerHTML = "";
-      wsTargetWords.forEach((w) => {
-        const chip = document.createElement("div");
-        chip.className = "ws-word-chip" + (wsFoundWords.has(w) ? " found" : "");
-        chip.textContent = w;
-        listEl.appendChild(chip);
-      });
-      document.getElementById("wsFoundCounter").textContent = `Found: ${wsFoundWords.size} / ${wsTargetWords.length} Words`;
-    }
-
-    function getLineCells(r1, c1, r2, c2) {
-      const dr = r2 - r1;
-      const dc = c2 - c1;
-      if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return null;
-
-      const steps = Math.max(Math.abs(dr), Math.abs(dc));
-      const stepR = dr === 0 ? 0 : dr / steps;
-      const stepC = dc === 0 ? 0 : dc / steps;
-
-      const path = [];
-      for (let i = 0; i <= steps; i++) {
-        path.push([r1 + stepR * i, c1 + stepC * i]);
-      }
-      return path;
-    }
-
-    function highlightCells(cells) {
-      clearSelectedHighlight();
-      cells.forEach(([r, c]) => {
-        const el = document.querySelector(`.ws-cell[data-r="${r}"][data-c="${c}"]`);
-        if (el) el.classList.add("selected");
-      });
-    }
-
-    function clearSelectedHighlight() {
-      document.querySelectorAll(".ws-cell.selected").forEach((el) => el.classList.remove("selected"));
-    }
-
-    function clearCurrentWsSelection() {
-      wsTapStartCell = null;
-      wsDragCells = [];
-      clearSelectedHighlight();
-    }
-
-    function handleCellPointerDown(r, c) {
-      if (wsTapStartCell && (wsTapStartCell[0] !== r || wsTapStartCell[1] !== c)) {
-        const line = getLineCells(wsTapStartCell[0], wsTapStartCell[1], r, c);
-        if (line) {
-          evaluateSelectedPath(line);
-          clearCurrentWsSelection();
-          return;
-        }
-      }
-
-      wsIsDragging = true;
-      wsTapStartCell = [r, c];
-      wsDragCells = [[r, c]];
-      highlightCells(wsDragCells);
-    }
-
-    function handleCellPointerEnter(r, c) {
-      if (!wsTapStartCell) return;
-      const line = getLineCells(wsTapStartCell[0], wsTapStartCell[1], r, c);
-      if (line) {
-        wsDragCells = line;
-        highlightCells(line);
-      }
-    }
-
-    async function evaluateSelectedPath(cells) {
-      const forwardStr = cells.map(([r, c]) => wsGrid[r][c]).join("");
-      const backwardStr = forwardStr.split("").reverse().join("");
-
-      const matchedWord = wsTargetWords.find(
-        (w) => !wsFoundWords.has(w) && (w === forwardStr || w === backwardStr)
-      );
-
-      if (matchedWord) {
-        wsFoundWords.add(matchedWord);
-        cells.forEach(([r, c]) => {
-          wsFoundCells.add(`${r},${c}`);
-          const el = document.querySelector(`.ws-cell[data-r="${r}"][data-c="${c}"]`);
-          if (el) el.classList.add("found");
-        });
-        renderWordBankChips();
-
-        if (wsFoundWords.size === wsTargetWords.length) {
-          await finishWordSearch();
-        }
-      }
-    }
-
-    function startWsTimer() {
-      stopWsTimer();
-      wsStartTimeMs = Date.now();
-      document.getElementById("wsTimerDisplay").textContent = "00:00";
-
-      wsTimerInterval = setInterval(() => {
-        const secs = Math.floor((Date.now() - wsStartTimeMs) / 1000);
-        document.getElementById("wsTimerDisplay").textContent = formatTime(secs);
-      }, 500);
-    }
-
-    function stopWsTimer() {
-      if (wsTimerInterval) {
-        clearInterval(wsTimerInterval);
-        wsTimerInterval = null;
-      }
-    }
-
-    async function finishWordSearch() {
-      stopWsTimer();
-      wsActive = false;
-      wsCompleted = true;
-
-      const finalSeconds = Math.max(1, Math.floor((Date.now() - wsStartTimeMs) / 1000));
-
-      hideAllViews();
-      document.getElementById("viewWsResults").classList.remove("hidden");
-
-      document.getElementById("wsResPlayerName").textContent = wsUser.fullName;
-      document.getElementById("wsResPlayerProf").textContent = wsUser.profession;
-      document.getElementById("wsResFound").textContent = `${wsTargetWords.length} / ${wsTargetWords.length}`;
-      document.getElementById("wsResPct").textContent = `${wsTargetWords.length}/${wsTargetWords.length}`;
-      document.getElementById("wsResTime").textContent = formatTime(finalSeconds);
-
-      const statusMsg = document.getElementById("wsSaveStatusMsg");
-      statusMsg.textContent = "Recording your speed on the Puzzle Top 10 Leaderboard...";
-
-      const record = {
-        email: wsUser.email,
-        full_name: wsUser.fullName,
-        profession: wsUser.profession,
-        words_found: wsTargetWords.length,
-        time_seconds: finalSeconds,
-        round_number: wsPortalState.round_number || 1,
-        updated_at: new Date().toISOString()
-      };
-
-      if (supabaseClient) {
-        const { error } = await supabaseClient
-          .from("word_search_leaderboard")
-          .upsert(record, { onConflict: "email" });
-
-        if (error) {
-          console.error(error);
-          statusMsg.textContent = "Error saving score. Check Supabase permissions.";
-        } else {
-          statusMsg.textContent = "✓ Your completion time is live on the Word Puzzle Top 10!";
-        }
-      }
-    }
-
-    async function loadWsLeaderboard() {
-      const listEl = document.getElementById("wsLeaderboardList");
-      listEl.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">Fetching Puzzle Top 10...</p>`;
-
-      if (!supabaseClient) return;
-
-      const { data, error } = await supabaseClient
-        .from("word_search_leaderboard")
-        .select("*")
-        .order("words_found", { ascending: false })
-        .order("time_seconds", { ascending: true })
-        .limit(10);
-
-      if (error || !data || data.length === 0) {
-        listEl.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">No puzzle finishers yet. Watch for the next live round!</p>`;
-        return;
-      }
-
-      listEl.innerHTML = "";
-      data.forEach((row, index) => {
-        const rank = index + 1;
-        const topClass = rank === 1 ? "top-1" : rank === 2 ? "top-2" : rank === 3 ? "top-3" : "";
-
-        const item = document.createElement("div");
-        item.className = `lb-item ${topClass}`;
-        item.innerHTML = `
-          <div class="lb-rank">${rank}</div>
-          <div class="lb-user">
-            <div class="lb-name">${escapeHtml(row.full_name)}</div>
-            <div class="lb-prof">${escapeHtml(row.profession)} • Round #${row.round_number || 1}</div>
-          </div>
-          <div class="lb-metrics">
-            <div class="lb-acc">⏱ ${formatTime(row.time_seconds)}</div>
-            <div class="lb-time">${row.words_found} Words</div>
-          </div>
-        `;
-        listEl.appendChild(item);
-      });
-    }
-
-    // =========================================================================
-    // 6. ADMIN PORTAL LOGIC: 3 QUIZ SETS, EDITABLE QUESTIONS, PUZZLE MODES
-    // =========================================================================
-    let isAdminLoggedIn = false;
-
-    function openAdminPortal() {
-      stopTimer();
-      stopWsTimer();
-      document.getElementById("mainNavTabs").classList.add("hidden");
-      hideAllViews();
-
-      if (isAdminLoggedIn) {
-        showAdminDashboard();
+    function showView(viewName) {
+      document.querySelectorAll('.demo-btn').forEach(btn => btn.classList.remove('active'));
+      if (viewName === 'quiz') {
+        document.getElementById('quiz-view').classList.remove('hidden');
+        document.getElementById('results-view').classList.add('hidden');
+        document.querySelectorAll('.demo-btn')[0].classList.add('active');
+        updateLiveTimers();
       } else {
-        document.getElementById("adminPinInput").value = "";
-        document.getElementById("adminLoginError").textContent = "";
-        document.getElementById("viewAdminLogin").classList.remove("hidden");
+        document.getElementById('quiz-view').classList.add('hidden');
+        document.getElementById('results-view').classList.remove('hidden');
       }
     }
 
-    function exitAdminView() {
-      switchTab("quiz");
-    }
+    function renderResultState(key) {
+      currentScenarioKey = key;
+      if (key === 'top10' || key === 'first') {
+        userClaimedTimestamp = Date.now();
+      }
+      showView('results');
 
-    function handleAdminLogin(event) {
-      event.preventDefault();
-      const pinInput = document.getElementById("adminPinInput").value.trim();
-      const errorEl = document.getElementById("adminLoginError");
+      const data = scenarios[key];
 
-      if (pinInput !== ADMIN_ACCESS_PIN) {
-        errorEl.textContent = "Incorrect Admin PIN. Please try again (e.g. Waqf-e-Nau).";
-        return;
+      const btnMap = { outside: 1, top10: 2, first: 3 };
+      if (btnMap[key] !== undefined) {
+        document.querySelectorAll('.demo-btn')[btnMap[key]].classList.add('active');
       }
 
-      isAdminLoggedIn = true;
-      document.getElementById("adminPinInput").value = "";
-      showAdminDashboard();
-    }
+      // Update Hero Badge
+      const badge = document.getElementById('rank-badge');
+      badge.textContent = data.badge;
+      badge.className = data.isTop10
+        ? 'badge-rank top-ten'
+        : (data.isDethroned ? 'badge-rank dethroned' : 'badge-rank');
 
-    function logoutAdmin() {
-      isAdminLoggedIn = false;
-      switchTab("quiz");
-    }
+      document.getElementById('congrats-heading').textContent = data.heading;
+      document.getElementById('standing-text').innerHTML = data.standing;
+      document.getElementById('stat-rank').textContent = `#${data.rank} / ${totalParticipants}`;
+      document.getElementById('stat-score').textContent = data.score;
+      document.getElementById('stat-time').textContent = data.time;
 
-    async function showAdminDashboard() {
-      hideAllViews();
-      document.getElementById("viewAdminDashboard").classList.remove("hidden");
-      await syncQuestionBank();
-      await syncPuzzleWordsBank();
-      switchAdminSubtab("quizControl");
-    }
+      const encBox = document.getElementById('encouragement-copy');
+      encBox.innerHTML = data.encouragement;
+      encBox.className = data.isDethroned ? 'encouragement-box alert-mode' : 'encouragement-box';
 
-    function switchAdminSubtab(subtab) {
-      ["subtabQuizControl", "subtabWsControl", "subtabAddSingle", "subtabManageQ", "subtabFullLb", "subtabTvSettings"].forEach((id) =>
-        document.getElementById(id).classList.remove("active")
-      );
-      ["adminPanelQuizControl", "adminPanelWsControl", "adminPanelSingle", "adminPanelManageQ", "adminPanelFullLb", "adminPanelTvSettings"].forEach((id) =>
-        document.getElementById(id).classList.add("hidden")
-      );
+      const ctaBtn = document.getElementById('try-again-btn');
+      ctaBtn.textContent = data.cta;
+      ctaBtn.className = data.isDethroned ? 'cta-primary urgent' : 'cta-primary';
 
-      if (subtab === "quizControl") {
-        document.getElementById("subtabQuizControl").classList.add("active");
-        document.getElementById("adminPanelQuizControl").classList.remove("hidden");
-        updateBankCountsUI();
-      } else if (subtab === "wsControl") {
-        document.getElementById("subtabWsControl").classList.add("active");
-        document.getElementById("adminPanelWsControl").classList.remove("hidden");
-        refreshAdminWsControlPanel();
-      } else if (subtab === "single") {
-        document.getElementById("subtabAddSingle").classList.add("active");
-        document.getElementById("adminPanelSingle").classList.remove("hidden");
-      } else if (subtab === "manageQ") {
-        document.getElementById("subtabManageQ").classList.add("active");
-        document.getElementById("adminPanelManageQ").classList.remove("hidden");
-        renderAdminQuestionsList();
-      } else if (subtab === "fullLb") {
-        document.getElementById("subtabFullLb").classList.add("active");
-        document.getElementById("adminPanelFullLb").classList.remove("hidden");
-        loadAdminFullLeaderboards();
-      } else if (subtab === "tvSettings") {
-        document.getElementById("subtabTvSettings").classList.add("active");
-        document.getElementById("adminPanelTvSettings").classList.remove("hidden");
-        populateTvSettingsForm();
-      }
-    }
-
-    // Set Active Quiz Set (1, 2, 3, or 0)
-    async function setActiveQuizBank(bankNum) {
-      activeQuizBank = bankNum;
-      if (supabaseClient) {
-        const { error } = await supabaseClient
-          .from("quiz_state")
-          .upsert({ id: 1, active_bank: bankNum, updated_at: new Date().toISOString() });
-
-        if (error) {
-          alert("Error updating live quiz set. Make sure you ran the updated SQL schema in Supabase.");
-          console.error(error);
-          return;
-        }
-      }
-      updateBankCountsUI();
-    }
-
-    // Upload .docx into Set 1, 2, or 3
-    function handleBankDocxUpload(event, bankNum) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function (loadEvent) {
-        mammoth
-          .extractRawText({ arrayBuffer: loadEvent.target.result })
-          .then(async function (result) {
-            const parsed = parseQuestionsFromText(result.value, bankNum);
-            if (parsed.length === 0) {
-              alert("No valid questions found in this .docx file. Please check the formatting guide.");
-              return;
-            }
-            if (!confirm(`Found ${parsed.length} questions in "${file.name}". Upload them into Set ${bankNum}?`)) {
-              return;
-            }
-            if (supabaseClient) {
-              const { error } = await supabaseClient.from("questions").insert(parsed);
-              if (error) {
-                alert("Error uploading questions to Supabase.");
-                console.error(error);
-              } else {
-                alert(`Success! Added ${parsed.length} questions to Set ${bankNum}!`);
-                event.target.value = "";
-                await syncQuestionBank();
-              }
-            }
-          })
-          .catch(function (err) {
-            alert("Could not read this .docx file.");
-            console.error(err);
-          });
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    async function clearQuizBank(bankNum) {
-      if (!confirm(`Are you sure you want to delete ALL questions inside Set ${bankNum}?`)) return;
-      if (supabaseClient) {
-        await supabaseClient.from("questions").delete().eq("bank_number", bankNum);
-        await syncQuestionBank();
-      }
-    }
-
-    function parseQuestionsFromText(rawText, bankNum) {
-      const lines = rawText
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter((l) => l.length > 0);
-
-      const extracted = [];
-      let currentQ = null;
-      let currentOpts = [];
-      let correctIdx = 0;
-
-      const optionRegex = /^([A-Da-d])[\.\)\:\-]\s*(.+)$/;
-
-      lines.forEach((line) => {
-        const optMatch = line.match(optionRegex);
-        if (optMatch && currentQ) {
-          let optText = optMatch[2].trim();
-          if (optText.endsWith("*")) {
-            optText = optText.slice(0, -1).trim();
-            correctIdx = currentOpts.length;
-          }
-          currentOpts.push(optText);
-
-          if (currentOpts.length === 4) {
-            extracted.push({
-              question_text: currentQ,
-              options: currentOpts,
-              correct_index: correctIdx,
-              bank_number: bankNum
-            });
-            currentQ = null;
-            currentOpts = [];
-            correctIdx = 0;
-          }
-        } else {
-          if (currentQ && currentOpts.length >= 2) {
-            while (currentOpts.length < 4) currentOpts.push("N/A");
-            extracted.push({
-              question_text: currentQ,
-              options: currentOpts.slice(0, 4),
-              correct_index: correctIdx,
-              bank_number: bankNum
-            });
-          }
-          currentQ = line.replace(/^(Q?\d+[\.\)\:\-]\s*)/i, "").trim();
-          currentOpts = [];
-          correctIdx = 0;
-        }
-      });
-
-      return extracted;
-    }
-
-    // Word Puzzle Admin Controls, 3 Grid Modes & Editable Word Count
-    async function refreshAdminWsControlPanel() {
-      await checkWordSearchPortalStatus(false);
-      await syncPuzzleWordsBank();
-
-      const badge = document.getElementById("adminWsStatusBadge");
-      const roundLbl = document.getElementById("adminWsRoundLabel");
-      roundLbl.textContent = `Round #${wsPortalState.round_number || 1}`;
-
-      if (wsPortalState.grid_size) {
-        document.getElementById("adminGridModeSelect").value = String(wsPortalState.grid_size);
-      }
-      if (wsPortalState.word_count) {
-        document.getElementById("adminCustomWordCountInput").value = wsPortalState.word_count;
-      }
-
-      if (wsPortalState.is_open) {
-        badge.textContent = "OPEN (LIVE)";
-        badge.className = "status-pill open";
+      // Toggle User Reign Banner
+      const reignBanner = document.getElementById('user-reign-banner');
+      if (data.isTop10) {
+        reignBanner.classList.remove('hidden');
       } else {
-        badge.textContent = "LOCKED";
-        badge.className = "status-pill closed";
+        reignBanner.classList.add('hidden');
       }
 
-      renderAdminWordChecklist();
-    }
+      // Update Missed Questions
+      const missedContainer = document.getElementById('wrong-answers-container');
+      const missedCount = document.getElementById('missed-count');
 
-    function renderAdminWordChecklist() {
-      const grid = document.getElementById("adminWordChecklistGrid");
-      grid.innerHTML = "";
-
-      const maxWordLen = parseInt(document.getElementById("adminGridModeSelect").value, 10) || 15;
-      const activeSet = new Set(wsPortalState.active_words || []);
-      const targetCount = parseInt(document.getElementById("adminCustomWordCountInput").value, 10) || 15;
-
-      const validPool = allPuzzleWordsPool.filter((w) => w.length <= maxWordLen);
-      const defaultCheck = activeSet.size > 0 ? activeSet : new Set(validPool.slice(0, targetCount));
-
-      allPuzzleWordsPool.forEach((word) => {
-        const tooLong = word.length > maxWordLen;
-        const isChecked = !tooLong && defaultCheck.has(word);
-
-        const label = document.createElement("label");
-        label.style.display = "flex";
-        label.style.alignItems = "center";
-        label.style.gap = "6px";
-        label.style.fontSize = "0.8rem";
-        label.style.cursor = tooLong ? "not-allowed" : "pointer";
-        label.style.background = tooLong ? "#EDF2F7" : "var(--white)";
-        label.style.opacity = tooLong ? "0.5" : "1";
-        label.style.padding = "6px 8px";
-        label.style.borderRadius = "6px";
-        label.style.border = "1px solid #CBD5E0";
-
-        label.innerHTML = `
-          <input type="checkbox" class="admin-word-chk" value="${word}" ${isChecked ? "checked" : ""} ${tooLong ? "disabled" : ""} onchange="updateSelectedWordsCountBadge()" />
-          <span style="font-weight: 700; color: var(--text-dark);">${word}</span>
-        `;
-        grid.appendChild(label);
-      });
-
-      updateSelectedWordsCountBadge();
-    }
-
-    function updateSelectedWordsCountBadge() {
-      const checked = document.querySelectorAll(".admin-word-chk:checked");
-      document.getElementById("selectedWordsCountBadge").textContent = checked.length;
-    }
-
-    function adminSelectAllWords(select) {
-      document.querySelectorAll(".admin-word-chk:not(:disabled)").forEach((chk) => {
-        chk.checked = select;
-      });
-      updateSelectedWordsCountBadge();
-    }
-
-    async function adminOpenNewWordSearchRound() {
-      if (!supabaseClient) return;
-
-      const checkedBoxes = document.querySelectorAll(".admin-word-chk:checked");
-      const targetCount = parseInt(document.getElementById("adminCustomWordCountInput").value, 10);
-      const chosenGridSize = parseInt(document.getElementById("adminGridModeSelect").value, 10) || 15;
-
-      if (!targetCount || targetCount < 1) {
-        alert("Please type a valid number of words (at least 1).");
-        return;
-      }
-
-      if (checkedBoxes.length < targetCount) {
-        alert(`You selected ${checkedBoxes.length} words, which is less than your target count of ${targetCount}. Please check at least ${targetCount} words or lower the word count.`);
-        return;
-      }
-
-      const btn = document.getElementById("btnOpenWsRound");
-      btn.disabled = true;
-      btn.textContent = "Opening Live Round...";
-
-      const selectedWords = Array.from(checkedBoxes).map((chk) => chk.value);
-      const finalWordsForRound = shuffleArray(selectedWords).slice(0, targetCount);
-      const nextRound = (wsPortalState.round_number || 0) + 1;
-
-      const { error } = await supabaseClient
-        .from("word_search_state")
-        .upsert({
-          id: 1,
-          is_open: true,
-          round_number: nextRound,
-          active_words: finalWordsForRound,
-          word_count: targetCount,
-          grid_size: chosenGridSize,
-          updated_at: new Date().toISOString()
-        });
-
-      btn.disabled = false;
-      btn.textContent = "🟢 Open Portal & Start New Round";
-
-      if (error) {
-        alert("Error opening round. Make sure you ran the updated SQL in Supabase.");
-        console.error(error);
+      if (data.missed.length === 0) {
+        missedCount.textContent = "0 Missed";
+        missedContainer.innerHTML = `<div class="perfect-score-msg">🌟 Perfect accuracy! You answered every single question correctly.</div>`;
       } else {
-        alert(`Round #${nextRound} is LIVE (${chosenGridSize}×${chosenGridSize} Grid, ${targetCount} Words)!`);
-        refreshAdminWsControlPanel();
-      }
-    }
-
-    async function adminCloseWordSearchRound() {
-      if (!supabaseClient) return;
-      const { error } = await supabaseClient
-        .from("word_search_state")
-        .upsert({
-          id: 1,
-          is_open: false,
-          round_number: wsPortalState.round_number || 1,
-          active_words: wsPortalState.active_words || [],
-          word_count: wsPortalState.word_count || 15,
-          grid_size: wsPortalState.grid_size || 15,
-          updated_at: new Date().toISOString()
-        });
-
-      if (!error) {
-        alert("Word Search Portal is now LOCKED.");
-        refreshAdminWsControlPanel();
-      }
-    }
-
-    async function handleAddPuzzleWords(event) {
-      event.preventDefault();
-      const raw = document.getElementById("newPuzzleWordsInput").value;
-      const tokens = raw
-        .split(/[\s,;\n]+/)
-        .map((w) => w.toUpperCase().replace(/[^A-Z]/g, ""))
-        .filter((w) => w.length >= 3 && w.length <= 13);
-
-      const uniqueNew = Array.from(new Set(tokens));
-      if (uniqueNew.length === 0) {
-        alert("Please enter valid words (3 to 13 letters each, letters only).");
-        return;
-      }
-
-      const btn = document.getElementById("saveWsWordsBtn");
-      btn.disabled = true;
-      btn.textContent = "Saving Words...";
-
-      if (supabaseClient) {
-        const rows = uniqueNew.map((w) => ({ word: w }));
-        const { error } = await supabaseClient
-          .from("word_search_words")
-          .upsert(rows, { onConflict: "word" });
-
-        if (error) {
-          alert("Error saving words.");
-          console.error(error);
-        } else {
-          alert(`Added ${uniqueNew.length} words to your bank!`);
-          document.getElementById("newPuzzleWordsInput").value = "";
-          await syncPuzzleWordsBank();
-          renderAdminWordChecklist();
-        }
-      }
-
-      btn.disabled = false;
-      btn.textContent = "Add Words to Bank";
-    }
-
-    // Add Single Quiz Question
-    async function handleAddSingleQuestion(event) {
-      event.preventDefault();
-      const bankNum = parseInt(document.getElementById("newQBankSelect").value, 10) || 1;
-      const qText = document.getElementById("newQText").value.trim();
-      const options = [
-        document.getElementById("newQOpt0").value.trim(),
-        document.getElementById("newQOpt1").value.trim(),
-        document.getElementById("newQOpt2").value.trim(),
-        document.getElementById("newQOpt3").value.trim()
-      ];
-
-      if (!qText || options.some((o) => !o)) return;
-
-      const btn = document.getElementById("saveSingleQBtn");
-      btn.disabled = true;
-      btn.textContent = "Saving...";
-
-      if (supabaseClient) {
-        const { error } = await supabaseClient.from("questions").insert([
-          { question_text: qText, options: options, correct_index: 0, bank_number: bankNum }
-        ]);
-
-        if (error) {
-          alert("Error saving question to Supabase.");
-          console.error(error);
-        } else {
-          alert(`Question added to Set ${bankNum}!`);
-          event.target.reset();
-          await syncQuestionBank();
-        }
-      }
-
-      btn.disabled = false;
-      btn.textContent = "Save Question to Live Bank";
-    }
-
-    // View / Edit / Delete All Questions
-    async function renderAdminQuestionsList() {
-      await syncQuestionBank();
-      const filterVal = document.getElementById("filterAdminQBank").value;
-      const container = document.getElementById("adminQuestionsList");
-      container.innerHTML = "";
-
-      const filtered =
-        filterVal === "all"
-          ? allQuestionsPool
-          : allQuestionsPool.filter((q) => String(q.bank) === filterVal);
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:16px;">No questions in this set yet.</p>`;
-        return;
-      }
-
-      filtered.forEach((item, index) => {
-        const div = document.createElement("div");
-        div.className = "admin-q-item";
-        div.innerHTML = `
-          <div style="font-size: 0.88rem; flex: 1;">
-            <span class="badge-pill" style="margin-bottom:4px;">Set ${item.bank}</span><br/>
-            <strong>${index + 1}. ${escapeHtml(item.q)}</strong>
-            <div style="color: var(--success); font-size: 0.8rem; margin-top: 3px;">
-              ✓ ${escapeHtml(item.options[item.answer])}
+        missedCount.textContent = `${data.missed.length} Question${data.missed.length > 1 ? 's' : ''} Missed`;
+        missedContainer.innerHTML = data.missed.map(item => `
+          <div class="wrong-item">
+            <div class="wrong-q">${item.question}</div>
+            <div class="answer-comparison">
+              <span class="your-ans">✕ Your answer: ${item.yourAnswer}</span>
+              <span class="correct-ans">✓ Correct answer: ${item.correctAnswer}</span>
             </div>
           </div>
-          <div style="display:flex; gap:6px; flex-shrink:0;">
-            <button class="btn-edit-outline" onclick="openEditQuestionModal(${item.id})">Edit</button>
-            <button class="btn-danger-outline" onclick="deleteDbQuestion(${item.id})">Remove</button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
+        `).join('');
+      }
+
+      updateLiveTimers();
     }
 
-    function openEditQuestionModal(id) {
-      const item = allQuestionsPool.find((q) => q.id === id);
-      if (!item) return;
+    function updateLiveTimers() {
+      const data = scenarios[currentScenarioKey];
 
-      document.getElementById("editQId").value = item.id;
-      document.getElementById("editQBank").value = String(item.bank || 1);
-      document.getElementById("editQText").value = item.q;
+      if (data.isTop10) {
+        const elapsedSec = Math.max(0, Math.floor((Date.now() - userClaimedTimestamp) / 1000));
+        const mins = Math.floor(elapsedSec / 60);
+        const secs = elapsedSec % 60;
+        const formattedUserHold = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+        document.getElementById('user-reign-text').textContent =
+          `Holding #${data.rank} for ${formattedUserHold} — defend your spot!`;
+      }
 
-      // Put correct answer in Opt0, and the remaining 3 in Opt1..3
-      const correctText = item.options[item.answer];
-      const wrongOpts = item.options.filter((_, idx) => idx !== item.answer);
+      const tbody = document.getElementById('leaderboard-body');
+      const rows = baseLeaderboard.map(entry => {
+        let displayEntry = { ...entry };
+        let isCurrentUser = false;
 
-      document.getElementById("editQOpt0").value = correctText || "";
-      document.getElementById("editQOpt1").value = wrongOpts[0] || "";
-      document.getElementById("editQOpt2").value = wrongOpts[1] || "";
-      document.getElementById("editQOpt3").value = wrongOpts[2] || "";
-
-      document.getElementById("editQuestionModal").classList.remove("hidden");
-    }
-
-    function closeEditQuestionModal() {
-      document.getElementById("editQuestionModal").classList.add("hidden");
-    }
-
-    async function saveEditedQuestion(event) {
-      event.preventDefault();
-      const id = parseInt(document.getElementById("editQId").value, 10);
-      const bankNum = parseInt(document.getElementById("editQBank").value, 10) || 1;
-      const qText = document.getElementById("editQText").value.trim();
-      const options = [
-        document.getElementById("editQOpt0").value.trim(),
-        document.getElementById("editQOpt1").value.trim(),
-        document.getElementById("editQOpt2").value.trim(),
-        document.getElementById("editQOpt3").value.trim()
-      ];
-
-      const btn = document.getElementById("saveEditQBtn");
-      btn.disabled = true;
-      btn.textContent = "Saving...";
-
-      if (supabaseClient) {
-        const { error } = await supabaseClient
-          .from("questions")
-          .update({
-            question_text: qText,
-            options: options,
-            correct_index: 0,
-            bank_number: bankNum
-          })
-          .eq("id", id);
-
-        if (error) {
-          alert("Error updating question.");
-          console.error(error);
-        } else {
-          closeEditQuestionModal();
-          await renderAdminQuestionsList();
+        if (data.isTop10 && entry.rank === data.rank) {
+          displayEntry.name = "Alex (You)";
+          displayEntry.score = data.score;
+          displayEntry.time = data.time;
+          displayEntry.claimedAt = userClaimedTimestamp;
+          isCurrentUser = true;
         }
-      }
 
-      btn.disabled = false;
-      btn.textContent = "Save Changes";
-    }
+        const medal = displayEntry.rank === 1 ? "🥇 #1" :
+                      displayEntry.rank === 2 ? "🥈 #2" :
+                      displayEntry.rank === 3 ? "🥉 #3" : `#${displayEntry.rank}`;
 
-    async function deleteDbQuestion(id) {
-      if (!confirm("Remove this question permanently?")) return;
-      if (supabaseClient) {
-        await supabaseClient.from("questions").delete().eq("id", id);
-        await renderAdminQuestionsList();
-      }
-    }
+        const holdInfo = formatHoldDuration(displayEntry.claimedAt);
 
-    async function loadAdminFullLeaderboards() {
-      const qContainer = document.getElementById("adminFullLeaderboardList");
-      const wsContainer = document.getElementById("adminFullWsLeaderboardList");
-      qContainer.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);">Loading...</p>`;
-      wsContainer.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);">Loading...</p>`;
+        return `
+          <tr class="${isCurrentUser ? 'highlight-user' : ''}">
+            <td><span class="rank-medal">${medal}</span></td>
+            <td>${displayEntry.name}</td>
+            <td>${displayEntry.score}</td>
+            <td>${displayEntry.time}</td>
+            <td><span class="hold-badge ${holdInfo.tierClass}">${holdInfo.label}</span></td>
+          </tr>
+        `;
+      }).join('');
 
-      if (!supabaseClient) return;
+      tbody.innerHTML = rows;
 
-      const { data: qData } = await supabaseClient
-        .from("leaderboard")
-        .select("*")
-        .order("accuracy", { ascending: false })
-        .order("time_seconds", { ascending: true });
-
-      if (!qData || qData.length === 0) {
-        qContainer.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);">No quiz entries yet.</p>`;
-      } else {
-        qContainer.innerHTML = "";
-        qData.forEach((row, idx) => {
-          const div = document.createElement("div");
-          div.className = "lb-item";
-          div.style.marginBottom = "8px";
-          div.innerHTML = `
-            <div class="lb-rank">${idx + 1}</div>
-            <div class="lb-user">
-              <div class="lb-name">${escapeHtml(row.full_name)}</div>
-              <div class="lb-prof">${escapeHtml(row.profession)} • ${escapeHtml(row.email)}</div>
-            </div>
-            <div class="lb-metrics" style="margin-right: 8px;">
-              <div class="lb-acc">${row.accuracy}%</div>
-              <div class="lb-time">⏱ ${formatTime(row.time_seconds)}</div>
-            </div>
-            <button class="btn-danger-outline" onclick="deleteLeaderboardEntry('${row.email}')">Remove</button>
+      const miniBody = document.getElementById('mini-leaderboard-body');
+      if (miniBody) {
+        miniBody.innerHTML = baseLeaderboard.slice(0, 3).map(entry => {
+          const medal = entry.rank === 1 ? "🥇 #1" : entry.rank === 2 ? "🥈 #2" : "🥉 #3";
+          const holdInfo = formatHoldDuration(entry.claimedAt);
+          return `
+            <tr>
+              <td><span class="rank-medal">${medal}</span></td>
+              <td>${entry.name}</td>
+              <td>${entry.score}</td>
+              <td>${entry.time}</td>
+              <td><span class="hold-badge ${holdInfo.tierClass}">${holdInfo.label}</span></td>
+            </tr>
           `;
-          qContainer.appendChild(div);
-        });
-      }
-
-      const { data: wsData } = await supabaseClient
-        .from("word_search_leaderboard")
-        .select("*")
-        .order("words_found", { ascending: false })
-        .order("time_seconds", { ascending: true });
-
-      if (!wsData || wsData.length === 0) {
-        wsContainer.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);">No word puzzle entries yet.</p>`;
-      } else {
-        wsContainer.innerHTML = "";
-        wsData.forEach((row, idx) => {
-          const div = document.createElement("div");
-          div.className = "lb-item";
-          div.style.marginBottom = "8px";
-          div.innerHTML = `
-            <div class="lb-rank">${idx + 1}</div>
-            <div class="lb-user">
-              <div class="lb-name">${escapeHtml(row.full_name)}</div>
-              <div class="lb-prof">${escapeHtml(row.profession)} • Round #${row.round_number || 1}</div>
-            </div>
-            <div class="lb-metrics" style="margin-right: 8px;">
-              <div class="lb-acc">⏱ ${formatTime(row.time_seconds)}</div>
-              <div class="lb-time">${row.words_found} Words</div>
-            </div>
-            <button class="btn-danger-outline" onclick="deleteWsLeaderboardEntry('${row.email}')">Remove</button>
-          `;
-          wsContainer.appendChild(div);
-        });
+        }).join('');
       }
     }
 
-    async function deleteLeaderboardEntry(email) {
-      if (!confirm(`Remove ${email} from the quiz leaderboard?`)) return;
-      if (supabaseClient) {
-        await supabaseClient.from("leaderboard").delete().eq("email", email);
-        loadAdminFullLeaderboards();
-      }
-    }
-
-    async function deleteWsLeaderboardEntry(email) {
-      if (!confirm(`Remove ${email} from the puzzle leaderboard?`)) return;
-      if (supabaseClient) {
-        await supabaseClient.from("word_search_leaderboard").delete().eq("email", email);
-        loadAdminFullLeaderboards();
-      }
-    }
-
-    async function clearEntireLeaderboard() {
-      if (!confirm("WARNING: Are you sure you want to delete ALL Quiz scores?")) return;
-      if (supabaseClient) {
-        await supabaseClient.from("leaderboard").delete().neq("email", "");
-        loadAdminFullLeaderboards();
-      }
-    }
-
-    async function clearEntireWsLeaderboard() {
-      if (!confirm("WARNING: Are you sure you want to delete ALL Word Puzzle scores?")) return;
-      if (supabaseClient) {
-        await supabaseClient.from("word_search_leaderboard").delete().neq("email", "");
-        loadAdminFullLeaderboards();
-      }
-    }
-
-    // =========================================================================
-    // 7. PUBLIC SMART TV / BIG SCREEN DISPLAY + REALTIME SYNC + QR CODE
-    // =========================================================================
-    let tvPollingInterval = null;
-    let tvRealtimeChannel = null;
-
-    const DEFAULT_TV_SETTINGS = {
-      speedTitle: "⚡ SURVIVAL OF THE FASTEST — SPEED & ACCURACY BOTH COUNT!",
-      speedMessage: "Don't just aim to finish—aim to finish fast and accurately! When scores or words found are equal, the fastest completion time takes the higher rank. Every second matters in the Quiz and the Word Puzzle!",
-      topLimit: 10,
-      qrUrl: "https://waqf-e-nau.vercel.app/"
-    };
-
-    function getTvDisplaySettings() {
-      try {
-        const raw = localStorage.getItem("wn_jalsa_tv_settings_v1");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          return {
-            speedTitle: parsed.speedTitle || DEFAULT_TV_SETTINGS.speedTitle,
-            speedMessage: parsed.speedMessage || DEFAULT_TV_SETTINGS.speedMessage,
-            topLimit: Math.min(50, Math.max(1, parseInt(parsed.topLimit, 10) || 10)),
-            qrUrl: (parsed.qrUrl || DEFAULT_TV_SETTINGS.qrUrl).trim()
-          };
-        }
-      } catch (e) {}
-      return { ...DEFAULT_TV_SETTINGS };
-    }
-
-    function saveTvDisplaySettings(settings) {
-      const normalized = {
-        speedTitle: (settings.speedTitle || "").trim() || DEFAULT_TV_SETTINGS.speedTitle,
-        speedMessage: (settings.speedMessage || "").trim() || DEFAULT_TV_SETTINGS.speedMessage,
-        topLimit: Math.min(50, Math.max(1, parseInt(settings.topLimit, 10) || 10)),
-        qrUrl: (settings.qrUrl || DEFAULT_TV_SETTINGS.qrUrl).trim()
-      };
-      localStorage.setItem("wn_jalsa_tv_settings_v1", JSON.stringify(normalized));
-      applyTvDisplaySettingsToDom(normalized);
-      renderPublicTvQrCode(normalized.qrUrl);
-      return normalized;
-    }
-
-    function applyTvDisplaySettingsToDom(settings = getTvDisplaySettings()) {
-      const bannerH3 = document.querySelector("#viewPublicTvDisplay .tv-speed-banner h3");
-      const bannerP = document.querySelector("#viewPublicTvDisplay .tv-speed-banner p");
-      const quizTitle = document.querySelector("#viewPublicTvDisplay .tv-board-col:nth-child(1) .tv-board-title");
-      const wsTitle = document.querySelector("#viewPublicTvDisplay .tv-board-col:nth-child(2) .tv-board-title");
-      const badgeTop = document.querySelector("#viewPublicTvDisplay .tv-speed-banner > div:last-child");
-
-      if (bannerH3) bannerH3.textContent = settings.speedTitle;
-      if (bannerP) bannerP.textContent = settings.speedMessage;
-      if (quizTitle) quizTitle.textContent = `🧠 20-Q Quiz Top ${settings.topLimit}`;
-      if (wsTitle) wsTitle.textContent = `🧩 Word Puzzle Top ${settings.topLimit}`;
-      if (badgeTop) {
-        badgeTop.innerHTML = `🏆 Top ${settings.topLimit} Ranked Live<br/><span style="color:#FFFFFF; font-weight:600;">Updates automatically on every new score</span>`;
-      }
-    }
-
-    function populateTvSettingsForm() {
-      const s = getTvDisplaySettings();
-      document.getElementById("adminTvSpeedTitleInput").value = s.speedTitle;
-      document.getElementById("adminTvSpeedMessageInput").value = s.speedMessage;
-      document.getElementById("adminTvTopLimitInput").value = s.topLimit;
-      document.getElementById("adminTvQrUrlInput").value = s.qrUrl || DEFAULT_TV_SETTINGS.qrUrl;
-      document.getElementById("tvSettingsSavedMsg").textContent = "";
-    }
-
-    function handleSaveTvDisplaySettings(event) {
-      event.preventDefault();
-      const titleVal = document.getElementById("adminTvSpeedTitleInput").value;
-      const msgVal = document.getElementById("adminTvSpeedMessageInput").value;
-      const limitVal = parseInt(document.getElementById("adminTvTopLimitInput").value, 10) || 10;
-      const qrVal = document.getElementById("adminTvQrUrlInput").value;
-
-      const saved = saveTvDisplaySettings({
-        speedTitle: titleVal,
-        speedMessage: msgVal,
-        topLimit: limitVal,
-        qrUrl: qrVal
-      });
-
-      document.getElementById("tvSettingsSavedMsg").textContent =
-        `✓ Saved! Public Display now shows Top ${saved.topLimit}, your speed message, and QR link ${saved.qrUrl}.`;
-    }
-
-    function launchPublicTvDisplay() {
-      stopTimer();
-      stopWsTimer();
-      document.getElementById("mainNavTabs").classList.add("hidden");
-      document.querySelector(".header").classList.add("hidden");
-      document.querySelector(".footer-bar").classList.add("hidden");
-      document.body.classList.add("tv-display-mode");
-
-      hideAllViews();
-      document.getElementById("viewPublicTvDisplay").classList.remove("hidden");
-
-      applyTvDisplaySettingsToDom();
-      renderPublicTvQrCode();
-      refreshPublicTvLeaderboards();
-      startPublicTvAutoSync();
-    }
-
-    function exitPublicTvDisplayToAdmin() {
-      stopPublicTvAutoSync();
-      document.body.classList.remove("tv-display-mode");
-      document.querySelector(".header").classList.remove("hidden");
-      document.querySelector(".footer-bar").classList.remove("hidden");
-      showAdminDashboard();
-    }
-
-    function startPublicTvAutoSync() {
-      stopPublicTvAutoSync();
-
-      // Poll every 5 seconds as a rock-solid fallback
-      tvPollingInterval = setInterval(() => {
-        refreshPublicTvLeaderboards();
-      }, 5000);
-
-      // Subscribe to instant Supabase Realtime changes if enabled
-      if (supabaseClient && typeof supabaseClient.channel === "function") {
-        try {
-          tvRealtimeChannel = supabaseClient
-            .channel("jalsa-live-leaderboards")
-            .on(
-              "postgres_changes",
-              { event: "*", schema: "public", table: "leaderboard" },
-              () => refreshPublicTvLeaderboards()
-            )
-            .on(
-              "postgres_changes",
-              { event: "*", schema: "public", table: "word_search_leaderboard" },
-              () => refreshPublicTvLeaderboards()
-            )
-            .subscribe();
-        } catch (err) {
-          console.warn("Realtime subscription fallback active:", err);
-        }
-      }
-    }
-
-    function stopPublicTvAutoSync() {
-      if (tvPollingInterval) {
-        clearInterval(tvPollingInterval);
-        tvPollingInterval = null;
-      }
-      if (tvRealtimeChannel && supabaseClient) {
-        try {
-          supabaseClient.removeChannel(tvRealtimeChannel);
-        } catch (e) {}
-        tvRealtimeChannel = null;
-      }
-    }
-
-    async function refreshPublicTvLeaderboards() {
-      const qListEl = document.getElementById("tvQuizLeaderboardList");
-      const wsListEl = document.getElementById("tvWsLeaderboardList");
-      const timeLabel = document.getElementById("tvLastUpdatedLabel");
-
-      if (!supabaseClient) return;
-
-      const tvSettings = getTvDisplaySettings();
-      const limitN = tvSettings.topLimit;
-      applyTvDisplaySettingsToDom(tvSettings);
-
-      const [{ data: qData }, { data: wsData }] = await Promise.all([
-        supabaseClient
-          .from("leaderboard")
-          .select("*")
-          .order("accuracy", { ascending: false })
-          .order("time_seconds", { ascending: true })
-          .limit(limitN),
-        supabaseClient
-          .from("word_search_leaderboard")
-          .select("*")
-          .order("words_found", { ascending: false })
-          .order("time_seconds", { ascending: true })
-          .limit(limitN)
-      ]);
-
-      const nowStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      if (timeLabel) timeLabel.textContent = `Updated ${nowStr}`;
-
-      // Render Quiz Top 10
-      if (!qData || qData.length === 0) {
-        document.getElementById("tvQuizCountBadge").textContent = "0 Ranked";
-        qListEl.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:24px;">Waiting for first quiz finisher...</p>`;
-      } else {
-        document.getElementById("tvQuizCountBadge").textContent = `Top ${qData.length}`;
-        qListEl.innerHTML = "";
-        qData.forEach((row, index) => {
-          const rank = index + 1;
-          const topClass = rank === 1 ? "top-1" : rank === 2 ? "top-2" : rank === 3 ? "top-3" : "";
-          const item = document.createElement("div");
-          item.className = `lb-item ${topClass}`;
-          item.innerHTML = `
-            <div class="lb-rank">${rank}</div>
-            <div class="lb-user">
-              <div class="lb-name">${escapeHtml(row.full_name)}</div>
-              <div class="lb-prof">${escapeHtml(row.profession)}</div>
-            </div>
-            <div class="lb-metrics">
-              <div class="lb-acc">${row.accuracy}%</div>
-              <div class="lb-time">⚡ ${formatTime(row.time_seconds)}</div>
-            </div>
-          `;
-          qListEl.appendChild(item);
-        });
-      }
-
-      // Render Word Puzzle Top 10
-      if (!wsData || wsData.length === 0) {
-        document.getElementById("tvWsCountBadge").textContent = "0 Ranked";
-        wsListEl.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:24px;">Waiting for first puzzle finisher...</p>`;
-      } else {
-        document.getElementById("tvWsCountBadge").textContent = `Top ${wsData.length}`;
-        wsListEl.innerHTML = "";
-        wsData.forEach((row, index) => {
-          const rank = index + 1;
-          const topClass = rank === 1 ? "top-1" : rank === 2 ? "top-2" : rank === 3 ? "top-3" : "";
-          const item = document.createElement("div");
-          item.className = `lb-item ${topClass}`;
-          item.innerHTML = `
-            <div class="lb-rank">${rank}</div>
-            <div class="lb-user">
-              <div class="lb-name">${escapeHtml(row.full_name)}</div>
-              <div class="lb-prof">${escapeHtml(row.profession)} • Round #${row.round_number || 1}</div>
-            </div>
-            <div class="lb-metrics">
-              <div class="lb-acc">⚡ ${formatTime(row.time_seconds)}</div>
-              <div class="lb-time">${row.words_found} Words</div>
-            </div>
-          `;
-          wsListEl.appendChild(item);
-        });
-      }
-    }
-
-    // Pure JS QR Code Matrix Generator (Version 1-6 Byte Mode, ECC-L) with SVG output
-    function renderPublicTvQrCode(overrideUrl) {
-      const s = getTvDisplaySettings();
-      let targetUrl = (overrideUrl || s.qrUrl || "").trim();
-      if (!targetUrl) {
-        const loc = window.location.href.split("#")[0].split("?")[0];
-        targetUrl = loc && loc.startsWith("http") ? loc : DEFAULT_TV_SETTINGS.qrUrl;
-      }
-      document.getElementById("tvQrUrlText").textContent = targetUrl;
-      const container = document.getElementById("tvQrCodeContainer");
-      container.innerHTML = generateQrSvg(targetUrl, 184);
-    }
-
-    // Lightweight QR code generator supporting alphanumeric/URL strings up to ~84 bytes
-    function generateQrSvg(text, sizePx) {
-      const matrix = buildQrMatrix(text);
-      if (!matrix) {
-        // Fallback clean visual block if URL is unusually long
-        return `<div style="width:${sizePx}px;height:${sizePx}px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--text-muted);text-align:center;">Open link below on your phone</div>`;
-      }
-      const n = matrix.length;
-      const quiet = 2;
-      const total = n + quiet * 2;
-      let rects = "";
-      for (let r = 0; r < n; r++) {
-        for (let c = 0; c < n; c++) {
-          if (matrix[r][c]) {
-            rects += `<rect x="${c + quiet}" y="${r + quiet}" width="1" height="1" fill="#001c47"/>`;
-          }
-        }
-      }
-      return `<svg xmlns="http://www.w3.org/2000/svg" width="${sizePx}" height="${sizePx}" viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges"><rect width="${total}" height="${total}" fill="#ffffff"/>${rects}</svg>`;
-    }
-
-    function buildQrMatrix(str) {
-      const bytes = [];
-      for (let i = 0; i < str.length; i++) {
-        const code = str.charCodeAt(i);
-        if (code < 128) bytes.push(code);
-        else bytes.push(63);
-      }
-
-      // Select QR version (1..6) for ECC Level L (byte mode)
-      const capacities = [0, 17, 32, 53, 78, 106, 134];
-      const totalCodewords = [0, 26, 44, 70, 100, 134, 172];
-      const ecCodewords = [0, 7, 10, 15, 20, 26, 18]; // Note: v6 has 2 blocks in spec, keep v1-v5 single block for simplicity
-      let version = 0;
-      for (let v = 1; v <= 5; v++) {
-        if (bytes.length <= capacities[v]) {
-          version = v;
-          break;
-        }
-      }
-      if (!version) return null;
-
-      const size = 17 + version * 4;
-      const dataLen = totalCodewords[version] - ecCodewords[version];
-
-      // Build bit stream: 4-bit mode (0100) + 8-bit count + 8-bit data + terminator + pad
-      const bits = [];
-      const pushBits = (val, len) => {
-        for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
-      };
-      pushBits(4, 4);
-      pushBits(bytes.length, 8);
-      bytes.forEach((b) => pushBits(b, 8));
-      const maxDataBits = dataLen * 8;
-      const termLen = Math.min(4, maxDataBits - bits.length);
-      pushBits(0, termLen);
-      while (bits.length % 8 !== 0) bits.push(0);
-
-      const cw = [];
-      for (let i = 0; i < bits.length; i += 8) {
-        let byte = 0;
-        for (let j = 0; j < 8; j++) byte = (byte << 1) | (bits[i + j] || 0);
-        cw.push(byte);
-      }
-      const padBytes = [0xec, 0x11];
-      let pIdx = 0;
-      while (cw.length < dataLen) {
-        cw.push(padBytes[pIdx % 2]);
-        pIdx++;
-      }
-
-      // Reed-Solomon over GF(256) with primitive polynomial 0x11d
-      const rs = computeReedSolomon(cw, ecCodewords[version]);
-      const fullCw = cw.concat(rs);
-
-      const grid = Array.from({ length: size }, () => Array(size).fill(null));
-      const isReserved = Array.from({ length: size }, () => Array(size).fill(false));
-
-      const placeFinder = (r0, c0) => {
-        for (let r = -1; r <= 7; r++) {
-          for (let c = -1; c <= 7; c++) {
-            const rr = r0 + r;
-            const cc = c0 + c;
-            if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
-            const inBox = r >= 0 && r <= 6 && c >= 0 && c <= 6;
-            const border = r === 0 || r === 6 || c === 0 || c === 6;
-            const center = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-            grid[rr][cc] = inBox && (border || center) ? 1 : 0;
-            isReserved[rr][cc] = true;
-          }
-        }
-      };
-
-      placeFinder(0, 0);
-      placeFinder(0, size - 7);
-      placeFinder(size - 7, 0);
-
-      // Alignment pattern for version >= 2 at (size-7, size-7)
-      if (version >= 2) {
-        const ac = size - 7;
-        for (let r = -2; r <= 2; r++) {
-          for (let c = -2; c <= 2; c++) {
-            const val = Math.max(Math.abs(r), Math.abs(c)) === 2 || (r === 0 && c === 0) ? 1 : 0;
-            grid[ac + r][ac + c] = val;
-            isReserved[ac + r][ac + c] = true;
-          }
-        }
-      }
-
-      // Timing patterns
-      for (let i = 8; i < size - 8; i++) {
-        const bit = i % 2 === 0 ? 1 : 0;
-        if (!isReserved[6][i]) { grid[6][i] = bit; isReserved[6][i] = true; }
-        if (!isReserved[i][6]) { grid[i][6] = bit; isReserved[i][6] = true; }
-      }
-
-      // Dark module
-      grid[size - 8][8] = 1;
-      isReserved[size - 8][8] = true;
-
-      // Reserve format info cells
-      for (let i = 0; i < 9; i++) {
-        if (i < size) isReserved[8][i] = true;
-        if (i < size) isReserved[i][8] = true;
-      }
-      for (let i = 0; i < 8; i++) {
-        isReserved[8][size - 1 - i] = true;
-        isReserved[size - 1 - i][8] = true;
-      }
-
-      // Place data bits in zigzag upwards/downwards
-      const allBits = [];
-      fullCw.forEach((b) => {
-        for (let i = 7; i >= 0; i--) allBits.push((b >> i) & 1);
-      });
-
-      let bitPtr = 0;
-      let upward = true;
-      for (let col = size - 1; col >= 1; col -= 2) {
-        if (col === 6) col--;
-        for (let step = 0; step < size; step++) {
-          const row = upward ? size - 1 - step : step;
-          for (let dx = 0; dx < 2; dx++) {
-            const c = col - dx;
-            if (!isReserved[row][c]) {
-              const rawBit = bitPtr < allBits.length ? allBits[bitPtr++] : 0;
-              // Apply mask 0: (row + col) % 2 === 0
-              const masked = (row + c) % 2 === 0 ? rawBit ^ 1 : rawBit;
-              grid[row][c] = masked;
-            }
-          }
-        }
-        upward = !upward;
-      }
-
-      // Format info for ECC L (01) and Mask 0 (000) -> 0x77c0 (15 bits)
-      const fmtBits = 0x77c0;
-      const getFmtBit = (idx) => (fmtBits >> (14 - idx)) & 1;
-      const aroundCoords = [
-        [0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[7,8],[8,8],[8,7],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0]
-      ];
-      for (let i = 0; i < 15; i++) {
-        const [r, c] = aroundCoords[i];
-        grid[r][c] = getFmtBit(i);
-      }
-      for (let i = 0; i < 8; i++) {
-        grid[8][size - 8 + i] = getFmtBit(i);
-      }
-      for (let i = 0; i < 7; i++) {
-        grid[size - 7 + i][8] = getFmtBit(8 + i);
-      }
-
-      return grid;
-    }
-
-    function computeReedSolomon(data, eccLen) {
-      const gfExp = new Array(512);
-      const gfLog = new Array(256);
-      let x = 1;
-      for (let i = 0; i < 255; i++) {
-        gfExp[i] = x;
-        gfLog[x] = i;
-        x <<= 1;
-        if (x & 0x100) x ^= 0x11d;
-      }
-      for (let i = 255; i < 512; i++) gfExp[i] = gfExp[i - 255];
-
-      const gfMul = (a, b) => (a === 0 || b === 0 ? 0 : gfExp[gfLog[a] + gfLog[b]]);
-
-      let gen = [1];
-      for (let i = 0; i < eccLen; i++) {
-        const next = new Array(gen.length + 1).fill(0);
-        for (let j = 0; j < gen.length; j++) {
-          next[j] ^= gen[j];
-          next[j + 1] ^= gfMul(gen[j], gfExp[i]);
-        }
-        gen = next;
-      }
-
-      const msg = data.concat(new Array(eccLen).fill(0));
-      for (let i = 0; i < data.length; i++) {
-        const coef = msg[i];
-        if (coef !== 0) {
-          for (let j = 1; j < gen.length; j++) {
-            msg[i + j] ^= gfMul(gen[j], coef);
-          }
-        }
-      }
-      return msg.slice(data.length);
-    }
-
+    setInterval(updateLiveTimers, 1000);
+    renderResultState('outside');
   </script>
 </body>
 </html>
