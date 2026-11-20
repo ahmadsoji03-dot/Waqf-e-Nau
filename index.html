@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz Leaderboard & Results (With Position Hold Timer & Dethrone Alerts)</title>
+  <title>Quiz Leaderboard & Results — Supabase Live Edition</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: #0f172a;
@@ -34,21 +35,21 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 80px;
+      padding: 24px 16px 84px;
     }
 
     .container {
       width: 100%;
-      max-width: 760px;
+      max-width: 780px;
     }
 
-    /* Demo Switcher Bar */
-    .demo-controls {
+    /* Connection & Player Bar */
+    .top-bar {
       background: rgba(59, 130, 246, 0.12);
       border: 1px solid rgba(59, 130, 246, 0.35);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 12px 16px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -57,18 +58,43 @@
       font-size: 0.85rem;
     }
 
-    .demo-controls span {
-      color: #93c5fd;
-      font-weight: 600;
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      background: rgba(16, 185, 129, 0.16);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.4);
     }
 
-    .demo-buttons {
+    .status-pill.fallback {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.45);
+    }
+
+    .player-controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      align-items: center;
+      gap: 8px;
     }
 
-    .demo-btn {
+    .player-input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      width: 150px;
+    }
+
+    .btn-sm {
       background: var(--surface);
       color: var(--text-main);
       border: 1px solid var(--border);
@@ -76,21 +102,22 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.8rem;
+      font-weight: 600;
       transition: all 0.15s ease;
     }
 
-    .demo-btn:hover, .demo-btn.active {
+    .btn-sm:hover, .btn-sm.active {
       background: var(--primary);
       border-color: var(--primary);
       color: #fff;
     }
 
-    .demo-btn.danger-sim {
+    .btn-sm.danger {
       border-color: rgba(239, 68, 68, 0.5);
       color: #fca5a5;
     }
 
-    .demo-btn.danger-sim:hover {
+    .btn-sm.danger:hover {
       background: var(--accent-red);
       border-color: var(--accent-red);
       color: #fff;
@@ -102,7 +129,7 @@
       border: 1px solid rgba(16, 185, 129, 0.35);
       border-radius: 12px;
       padding: 14px 18px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -112,7 +139,7 @@
 
     .notif-bar.enabled {
       background: rgba(16, 185, 129, 0.1);
-      border-color: rgba(16, 185, 129, 0.4);
+      border-color: rgba(16, 185, 129, 0.45);
     }
 
     .notif-info {
@@ -123,64 +150,29 @@
       min-width: 240px;
     }
 
-    .notif-icon {
-      font-size: 1.5rem;
-      line-height: 1;
-    }
-
     .notif-text h4 {
       font-size: 0.95rem;
-      color: var(--text-main);
       margin-bottom: 2px;
     }
 
     .notif-text p {
-      font-size: 0.83rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
       line-height: 1.35;
     }
 
-    .notif-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
     .btn-notif {
       background: var(--accent-green);
-      color: #06281e;
+      color: #05251b;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       padding: 9px 14px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.1s ease, opacity 0.15s ease;
-      white-space: nowrap;
     }
 
-    .btn-notif:hover {
-      opacity: 0.92;
-      transform: translateY(-1px);
-    }
-
-    .btn-notif-secondary {
-      background: var(--surface-elevated);
-      color: var(--text-main);
-      border: 1px solid var(--border);
-      font-weight: 600;
-      font-size: 0.82rem;
-      padding: 8px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .btn-notif-secondary:hover {
-      border-color: var(--primary);
-    }
-
-    /* Simulated Lock-Screen / System Push Toast */
+    /* Push Toast */
     .push-toast-container {
       position: fixed;
       top: 18px;
@@ -189,110 +181,91 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-width: 360px;
+      max-width: 370px;
       width: calc(100% - 36px);
       pointer-events: none;
     }
 
     .push-toast {
       pointer-events: auto;
-      background: rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(239, 68, 68, 0.65);
+      background: rgba(15, 23, 42, 0.97);
+      border: 1px solid rgba(239, 68, 68, 0.7);
       border-left: 5px solid var(--accent-red);
       border-radius: 12px;
       padding: 14px 16px;
-      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.55);
-      animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.6);
+      animation: slideIn 0.25s ease-out;
       cursor: pointer;
     }
 
-    .push-toast-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 5px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
+    @keyframes slideIn {
+      from { transform: translateX(105%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
 
     .push-toast-title {
-      font-size: 0.98rem;
       font-weight: 700;
       color: #fca5a5;
+      font-size: 0.95rem;
       margin-bottom: 4px;
     }
 
     .push-toast-body {
-      font-size: 0.86rem;
+      font-size: 0.84rem;
       color: #e2e8f0;
       line-height: 1.4;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .push-toast-cta {
       display: inline-block;
       background: var(--accent-red);
       color: #fff;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 700;
-      padding: 5px 10px;
+      padding: 4px 9px;
       border-radius: 6px;
     }
 
-    @keyframes slideInRight {
-      from { transform: translateX(110%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
-    /* Card Base */
+    /* Card & Stakes */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 24px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     }
 
-    /* Pre-Quiz / Quiz Stakes Banner */
     .stakes-banner {
       background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(59, 130, 246, 0.16));
       border: 1px solid rgba(245, 158, 11, 0.4);
       border-radius: var(--radius);
       padding: 16px 20px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       display: flex;
-      align-items: flex-start;
       gap: 14px;
+      align-items: flex-start;
     }
 
-    .stakes-icon {
-      font-size: 1.6rem;
-      line-height: 1;
-    }
-
-    .stakes-content h3 {
+    .stakes-banner h3 {
       font-size: 1rem;
       color: #fcd34d;
       margin-bottom: 4px;
     }
 
-    .stakes-content p {
-      font-size: 0.9rem;
-      color: var(--text-main);
+    .stakes-banner p {
+      font-size: 0.88rem;
       line-height: 1.45;
     }
 
-    /* Quiz View */
+    /* Quiz Screen */
     .quiz-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
       padding-bottom: 14px;
+      margin-bottom: 18px;
       border-bottom: 1px solid var(--border);
     }
 
@@ -304,42 +277,41 @@
       border-radius: 999px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
-      font-size: 0.9rem;
     }
 
     .question-text {
-      font-size: 1.2rem;
+      font-size: 1.18rem;
       font-weight: 600;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       line-height: 1.4;
     }
 
     .options-grid {
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .option-btn {
       background: var(--surface-elevated);
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 14px 18px;
+      padding: 13px 16px;
       border-radius: 10px;
       text-align: left;
-      font-size: 0.98rem;
+      font-size: 0.96rem;
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
     .option-btn:hover {
       border-color: var(--primary);
-      background: rgba(59, 130, 246, 0.15);
+      background: rgba(59, 130, 246, 0.16);
     }
 
-    /* Results Hero Section */
+    /* Results Hero */
     .result-hero {
       text-align: center;
-      padding: 32px 24px;
+      padding: 30px 22px;
     }
 
     .badge-rank {
@@ -348,43 +320,34 @@
       border: 1px solid rgba(245, 158, 11, 0.45);
       color: #fcd34d;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       padding: 6px 14px;
       border-radius: 999px;
-      margin-bottom: 14px;
-      letter-spacing: 0.3px;
+      margin-bottom: 12px;
     }
 
     .badge-rank.top-ten {
-      background: rgba(16, 185, 129, 0.15);
+      background: rgba(16, 185, 129, 0.16);
       border-color: rgba(16, 185, 129, 0.45);
       color: #6ee7b7;
     }
 
-    .badge-rank.dethroned {
-      background: rgba(239, 68, 68, 0.18);
-      border-color: rgba(239, 68, 68, 0.5);
-      color: #fca5a5;
-    }
-
     .congrats-title {
-      font-size: 1.85rem;
+      font-size: 1.8rem;
       font-weight: 800;
       margin-bottom: 8px;
     }
 
     .standing-callout {
-      font-size: 1.15rem;
-      color: var(--text-main);
+      font-size: 1.12rem;
       margin-bottom: 12px;
     }
 
     .standing-callout strong {
       color: #60a5fa;
-      font-size: 1.3rem;
+      font-size: 1.25rem;
     }
 
-    /* Live Hold Reign Banner in Hero */
     .reign-banner {
       display: inline-flex;
       align-items: center;
@@ -392,53 +355,37 @@
       background: rgba(16, 185, 129, 0.12);
       border: 1px solid rgba(16, 185, 129, 0.35);
       color: #6ee7b7;
-      padding: 7px 14px;
+      padding: 6px 14px;
       border-radius: 999px;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 600;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       font-variant-numeric: tabular-nums;
-    }
-
-    .pulse-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--accent-green);
-      display: inline-block;
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-      margin: 16px 0 20px;
+      margin: 16px 0 18px;
     }
 
     .stat-box {
       background: var(--surface-elevated);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 14px 10px;
+      padding: 13px 10px;
     }
 
     .stat-label {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
       color: var(--text-muted);
       margin-bottom: 4px;
     }
 
     .stat-value {
-      font-size: 1.25rem;
+      font-size: 1.22rem;
       font-weight: 700;
     }
 
@@ -446,16 +393,10 @@
       background: rgba(59, 130, 246, 0.1);
       border: 1px solid rgba(59, 130, 246, 0.3);
       border-radius: 10px;
-      padding: 16px;
-      margin: 20px 0;
-      font-size: 0.98rem;
+      padding: 15px;
+      margin: 18px 0;
+      font-size: 0.96rem;
       line-height: 1.5;
-      color: #e2e8f0;
-    }
-
-    .encouragement-box.alert-mode {
-      background: rgba(239, 68, 68, 0.12);
-      border-color: rgba(239, 68, 68, 0.4);
     }
 
     .cta-primary {
@@ -465,96 +406,54 @@
       background: var(--primary);
       color: #fff;
       font-weight: 700;
-      font-size: 1.05rem;
-      padding: 15px 24px;
+      font-size: 1.02rem;
+      padding: 14px 22px;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      transition: background 0.15s ease, transform 0.1s ease;
-      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
     }
 
     .cta-primary:hover {
       background: var(--primary-hover);
-      transform: translateY(-1px);
-    }
-
-    .cta-primary.urgent {
-      background: var(--accent-red);
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
-    }
-
-    .cta-primary.urgent:hover {
-      background: #dc2626;
     }
 
     .best-score-note {
       display: block;
       margin-top: 10px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
 
-    /* Section Headings */
+    /* Review & Table */
     .section-title {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       flex-wrap: wrap;
       gap: 8px;
     }
 
-    /* Wrong Answers Review */
     .wrong-item {
       background: var(--surface-elevated);
       border-left: 4px solid var(--accent-red);
       border-radius: 8px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-    }
-
-    .wrong-item:last-child {
-      margin-bottom: 0;
+      padding: 12px 14px;
+      margin-bottom: 10px;
     }
 
     .wrong-q {
       font-weight: 600;
-      margin-bottom: 8px;
-      font-size: 0.95rem;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
     }
 
-    .answer-comparison {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 0.88rem;
-    }
+    .your-ans { color: #fca5a5; font-size: 0.85rem; display: block; }
+    .correct-ans { color: #6ee7b7; font-weight: 600; font-size: 0.85rem; display: block; }
 
-    .your-ans {
-      color: #fca5a5;
-    }
-
-    .correct-ans {
-      color: #6ee7b7;
-      font-weight: 600;
-    }
-
-    .perfect-score-msg {
-      color: #6ee7b7;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 14px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-    }
-
-    /* Leaderboard Table */
-    .table-wrapper {
-      overflow-x: auto;
-    }
+    .table-wrapper { overflow-x: auto; }
 
     .leaderboard-table {
       width: 100%;
@@ -563,23 +462,19 @@
 
     .leaderboard-table th {
       text-align: left;
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       text-transform: uppercase;
       color: var(--text-muted);
-      padding: 10px 10px;
+      padding: 10px;
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
     }
 
     .leaderboard-table td {
-      padding: 12px 10px;
+      padding: 11px 10px;
       border-bottom: 1px solid rgba(51, 65, 85, 0.5);
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       white-space: nowrap;
-    }
-
-    .leaderboard-table tr:last-child td {
-      border-bottom: none;
     }
 
     .leaderboard-table tr.highlight-user {
@@ -587,227 +482,216 @@
       font-weight: 700;
     }
 
-    .leaderboard-table tr.highlight-user td:first-child {
-      border-left: 3px solid var(--primary);
-    }
-
-    .rank-medal {
-      font-weight: 700;
-      display: inline-block;
-      min-width: 28px;
-    }
-
-    /* Hold Timer Badges inside Leaderboard */
     .hold-badge {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      font-size: 0.8rem;
+      gap: 4px;
+      font-size: 0.78rem;
       font-weight: 600;
-      padding: 4px 9px;
+      padding: 4px 8px;
       border-radius: 6px;
       font-variant-numeric: tabular-nums;
     }
 
-    .hold-fresh {
-      background: rgba(59, 130, 246, 0.16);
-      color: #93c5fd;
-      border: 1px solid rgba(59, 130, 246, 0.35);
+    .hold-fresh { background: rgba(59, 130, 246, 0.16); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.35); }
+    .hold-steady { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.25); }
+    .hold-legend { background: rgba(245, 158, 11, 0.16); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+
+    pre.sql-box {
+      background: #090d16;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 0.78rem;
+      color: #a5f3fc;
+      overflow-x: auto;
+      line-height: 1.45;
+      margin-top: 10px;
     }
 
-    .hold-steady {
-      background: rgba(148, 163, 184, 0.12);
-      color: #cbd5e1;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-    }
-
-    .hold-legend {
-      background: rgba(245, 158, 11, 0.16);
-      color: #fcd34d;
-      border: 1px solid rgba(245, 158, 11, 0.4);
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     @media (max-width: 560px) {
-      .stats-row {
-        grid-template-columns: 1fr;
-      }
-      .congrats-title {
-        font-size: 1.5rem;
-      }
+      .stats-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Floating Push Notification Toast Container -->
   <div id="push-toast-container" class="push-toast-container"></div>
 
   <div class="container">
-    <!-- Interactive Preview Switcher -->
-    <div class="demo-controls">
-      <span>Preview State:</span>
-      <div class="demo-buttons">
-        <button class="demo-btn" onclick="showView('quiz')">1. Quiz Screen</button>
-        <button class="demo-btn active" onclick="renderResultState('outside')">2. #18 of 500</button>
-        <button class="demo-btn" onclick="renderResultState('top10')">3. #9 of 500</button>
-        <button class="demo-btn" onclick="renderResultState('first')">4. #1 of 500</button>
-        <button class="demo-btn danger-sim" onclick="simulateDethrone()">⚡ Test Dethrone Alert</button>
+    <!-- Top Connection & Player Bar -->
+    <div class="top-bar">
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <span id="db-status-pill" class="status-pill fallback">⏳ Connecting Supabase...</span>
+        <span id="db-status-detail" style="color: var(--text-muted); font-size: 0.78rem;">Project: bwnnmsicsclwekpkyuez</span>
+      </div>
+
+      <div class="player-controls">
+        <input id="player-name-input" class="player-input" type="text" value="Alex" placeholder="Your Nickname" />
+        <button class="btn-sm" onclick="startQuiz()">Play Quiz</button>
+        <button class="btn-sm" onclick="showView('results')">Results</button>
+        <button class="btn-sm danger" onclick="simulateTop10Dethrone()">⚡ Test Top-10 Alert</button>
+        <button class="btn-sm" onclick="toggleSqlHelper()">SQL Setup</button>
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- DETHRONE NOTIFICATION OPT-IN BANNER        -->
-    <!-- ========================================== -->
+    <!-- Optional SQL Setup Box for Supabase SQL Editor -->
+    <div id="sql-helper-card" class="card hidden">
+      <div class="section-title">
+        <span>🗄️ Supabase SQL Table Setup (Run Once in SQL Editor)</span>
+        <button class="btn-sm" onclick="copySql()">Copy SQL</button>
+      </div>
+      <p style="font-size: 0.84rem; color: var(--text-muted);">
+        Paste this into your Supabase dashboard → <strong>SQL Editor</strong> → <strong>Run</strong> to enable live database saving &amp; Realtime Top-10 updates:
+      </p>
+      <pre id="sql-code" class="sql-box">create table if not exists public.leaderboard_entries (
+  id uuid primary key default gen_random_uuid(),
+  player_name text unique not null,
+  score integer not null default 0,
+  total_questions integer not null default 5,
+  completion_time_ms integer not null default 60000,
+  claimed_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.leaderboard_entries enable row level security;
+
+create policy "Public read leaderboard"
+  on public.leaderboard_entries for select using (true);
+
+create policy "Public insert leaderboard"
+  on public.leaderboard_entries for insert with check (true);
+
+create policy "Public update leaderboard"
+  on public.leaderboard_entries for update using (true);
+
+alter publication supabase_realtime add table public.leaderboard_entries;</pre>
+    </div>
+
+    <!-- Dethrone Alert Opt-In Bar (Top 10 Only) -->
     <div id="notif-bar" class="notif-bar">
       <div class="notif-info">
-        <div id="notif-icon" class="notif-icon">🔔</div>
+        <div style="font-size: 1.4rem;">🔔</div>
         <div class="notif-text">
-          <h4 id="notif-title">Turn On Dethrone Alerts</h4>
-          <p id="notif-desc">Get an instant notification on your phone or browser the second someone takes your spot.</p>
+          <h4 id="notif-title">Top-10 Dethrone Alerts</h4>
+          <p id="notif-desc">Only triggered when a Top 10 spot (#1–#10) changes hands. Ranks outside Top 10 do not send dethrone alerts.</p>
         </div>
       </div>
-      <div class="notif-actions">
-        <button id="enable-notif-btn" class="btn-notif" onclick="requestDethroneNotifications()">Allow Notifications</button>
-        <button class="btn-notif-secondary" onclick="simulateDethrone()">Preview Alert</button>
+      <div style="display: flex; gap: 8px;">
+        <button id="enable-notif-btn" class="btn-notif" onclick="requestAlerts()">Allow Notifications</button>
+        <button class="btn-sm" onclick="simulateTop10Dethrone()">Preview Alert</button>
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- VIEW 1: ACTIVE QUIZ PAGE (SETTING STAKES)  -->
-    <!-- ========================================== -->
+    <!-- QUIZ VIEW -->
     <div id="quiz-view" class="hidden">
       <div class="stakes-banner">
-        <div class="stakes-icon">🏆</div>
-        <div class="stakes-content">
-          <h3>Top 10 Leaderboard Challenge — Speed &amp; Accuracy Matter!</h3>
+        <div style="font-size: 1.5rem;">🏆</div>
+        <div>
+          <h3>Accuracy + Speed = Top 10 Leaderboard</h3>
           <p>
-            Rankings are determined by your <strong>total correct answers</strong> and <strong>completion speed</strong>. 
-            Once you claim a spot, a live timer tracks how long you hold your position before someone dethrones you!
+            Answer accurately and as fast as possible. Your live hold timer starts the moment you claim a spot, and <strong>only Top 10 (#1–#10)</strong> changes trigger dethrone notifications.
           </p>
         </div>
       </div>
 
       <div class="card">
         <div class="quiz-header">
-          <span style="color: var(--text-muted); font-weight: 600;">Question 3 of 5</span>
-          <span class="timer-pill" id="live-quiz-timer">⏱ 00:14.2</span>
+          <span id="q-progress" style="color: var(--text-muted); font-weight: 600;">Question 1 of 5</span>
+          <span class="timer-pill" id="live-quiz-timer">⏱ 00.0s</span>
         </div>
-
-        <div class="question-text">
-          Which factor determines who ranks higher when two participants get the exact same quiz score?
-        </div>
-
-        <div class="options-grid">
-          <button class="option-btn" onclick="renderResultState('outside')">A) Alphabetical order of their username</button>
-          <button class="option-btn" onclick="renderResultState('outside')">B) Faster completion speed (time taken)</button>
-          <button class="option-btn" onclick="renderResultState('outside')">C) Whoever joined the website first</button>
-          <button class="option-btn" onclick="renderResultState('outside')">D) Random selection</button>
-        </div>
+        <div id="q-text" class="question-text">Loading question...</div>
+        <div id="q-options" class="options-grid"></div>
       </div>
 
-      <!-- Mini Top 3 Preview on Quiz Page with Hold Timers -->
       <div class="card">
         <div class="section-title">
-          <span>🔥 Current Top 3 &amp; Reign Duration</span>
-          <span style="font-size: 0.82rem; color: var(--text-muted);">500 Participants</span>
+          <span>🔥 Current Top 3 &amp; Hold Timers</span>
+          <span id="quiz-total-players" style="font-size: 0.82rem; color: var(--text-muted);">1,000 Competitors</span>
         </div>
         <div class="table-wrapper">
           <table class="leaderboard-table">
             <thead>
               <tr>
                 <th>Rank</th>
-                <th>Participant</th>
+                <th>Player</th>
                 <th>Score</th>
                 <th>Speed</th>
-                <th>Holding Spot For</th>
+                <th>Holding For</th>
               </tr>
             </thead>
-            <tbody id="mini-leaderboard-body">
-              <!-- Populated live via JS -->
-            </tbody>
+            <tbody id="mini-leaderboard-body"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- VIEW 2: RESULTS & LEADERBOARD SCREEN       -->
-    <!-- ========================================== -->
+    <!-- RESULTS VIEW -->
     <div id="results-view">
-      <!-- 1. Hero Congratulations, Standing & Dynamic Try Again CTA -->
       <div class="card result-hero">
-        <div id="rank-badge" class="badge-rank">POSITION #18 OF 500</div>
+        <div id="rank-badge" class="badge-rank">POSITION #18 OF 1,000</div>
         <h1 id="congrats-heading" class="congrats-title">Well done, Alex! 👏</h1>
         <p id="standing-text" class="standing-callout">
-          You finished at <strong>#18</strong> out of <strong>500</strong> participants.
+          You finished at <strong>#18</strong> out of <strong>1,000</strong> competitors.
         </p>
 
-        <!-- Live Position Hold Timer Pill (Shown when user is in Top 10) -->
         <div id="user-reign-banner" class="reign-banner hidden">
-          <span class="pulse-dot"></span>
-          <span id="user-reign-text">Holding #9 for 0s — defend your spot!</span>
+          <span>●</span>
+          <span id="user-reign-text">Holding Top 10 spot for 0s</span>
         </div>
 
         <div class="stats-row">
           <div class="stat-box">
             <div class="stat-label">Your Rank</div>
-            <div class="stat-value" id="stat-rank">#18 / 500</div>
+            <div class="stat-value" id="stat-rank">#18 / 1,000</div>
           </div>
           <div class="stat-box">
             <div class="stat-label">Accuracy</div>
             <div class="stat-value" id="stat-score">3 / 5</div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">Quiz Speed</div>
+            <div class="stat-label">Completion Speed</div>
             <div class="stat-value" id="stat-time">34.2s</div>
           </div>
         </div>
 
         <div id="encouragement-copy" class="encouragement-box">
-          You're not in the Top 10 yet, but you're close! Look at #1 on the leaderboard—they've been holding that spot for over <strong>10 hours</strong> unchallenged. Review what you missed below and <strong>try again</strong> to break into the <strong>Top 10</strong>!
+          You're not in the Top 10 yet—review what you missed below and <strong>try again</strong> for a faster, higher score to break into the <strong>Top 10</strong>!
         </div>
 
-        <button id="try-again-btn" class="cta-primary" onclick="showView('quiz')">
-          Try Again to Enter the Top 10
+        <button id="try-again-btn" class="cta-primary" onclick="startQuiz()">
+          Try Again to Reach the Top 10
         </button>
-        <span class="best-score-note">✓ You can play as many times as you like — your highest rank is always saved.</span>
+        <span class="best-score-note">✓ Your best score/speed is saved, and dethrone alerts only fire for Top 10 (#1–#10) spots.</span>
       </div>
 
-      <!-- 2. What You Got Wrong (Review Section) -->
       <div class="card">
         <div class="section-title">
-          <span>📋 Review What You Missed</span>
-          <span id="missed-count" style="font-size: 0.85rem; color: var(--text-muted);">2 Questions</span>
+          <span>📋 What You Got Wrong</span>
+          <span id="missed-count" style="font-size: 0.85rem; color: var(--text-muted);">2 Missed</span>
         </div>
-        <div id="wrong-answers-container">
-          <!-- Populated dynamically via JS -->
-        </div>
+        <div id="wrong-answers-container"></div>
       </div>
 
-      <!-- 3. Top 10 Leaderboard with Live Hold Timer -->
       <div class="card">
         <div class="section-title">
           <span>🏆 Top 10 Leaderboard</span>
-          <span style="font-size: 0.82rem; color: var(--text-muted);">Live Reign Timer Active</span>
+          <span id="leaderboard-subtitle" style="font-size: 0.82rem; color: var(--text-muted);">Ranked by Accuracy &amp; Speed</span>
         </div>
         <div class="table-wrapper">
           <table class="leaderboard-table">
             <thead>
               <tr>
                 <th>Rank</th>
-                <th>Participant</th>
+                <th>Player</th>
                 <th>Score</th>
                 <th>Speed</th>
-                <th>Holding Spot For</th>
+                <th>Holding For</th>
               </tr>
             </thead>
-            <tbody id="leaderboard-body">
-              <!-- Populated dynamically via JS -->
-            </tbody>
+            <tbody id="leaderboard-body"></tbody>
           </table>
         </div>
       </div>
@@ -815,356 +699,512 @@
   </div>
 
   <script>
-    const totalParticipants = 500;
-    let currentScenarioKey = 'outside';
-    let userClaimedTimestamp = Date.now();
-    let notificationsEnabled = false;
+    // Supabase Credentials Provided
+    const SUPABASE_URL = "https://bwnnmsicsclwekpkyuez.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_BCNISL4k2zwKbhSfCjKQUg_o83RyeNz";
 
-    const now = Date.now();
-    const baseLeaderboard = [
-      { rank: 1, name: "Kwame A.", score: "5 / 5", time: "18.4s", claimedAt: now - (10 * 3600 + 24 * 60 + 15) * 1000 },
-      { rank: 2, name: "Ama S.", score: "5 / 5", time: "21.0s", claimedAt: now - (4 * 3600 + 12 * 60 + 40) * 1000 },
-      { rank: 3, name: "David K.", score: "5 / 5", time: "23.7s", claimedAt: now - (1 * 3600 + 48 * 60 + 5) * 1000 },
-      { rank: 4, name: "Nana Y.", score: "5 / 5", time: "25.1s", claimedAt: now - (52 * 60 + 19) * 1000 },
-      { rank: 5, name: "Sarah M.", score: "5 / 5", time: "26.8s", claimedAt: now - (29 * 60 + 44) * 1000 },
-      { rank: 6, name: "Michael O.", score: "5 / 5", time: "28.3s", claimedAt: now - (14 * 60 + 10) * 1000 },
-      { rank: 7, name: "Esi T.", score: "4 / 5", time: "19.5s", claimedAt: now - (6 * 60 + 32) * 1000 },
-      { rank: 8, name: "Daniel B.", score: "4 / 5", time: "21.2s", claimedAt: now - (2 * 60 + 11) * 1000 },
-      { rank: 9, name: "Grace L.", score: "4 / 5", time: "22.9s", claimedAt: now - 45 * 1000 },
-      { rank: 10, name: "Kojo P.", score: "4 / 5", time: "24.6s", claimedAt: now - 8 * 1000 }
+    let supabaseClient = null;
+    let isSupabaseLive = false;
+
+    try {
+      if (window.supabase && typeof window.supabase.createClient === "function") {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+    } catch (err) {
+      console.warn("Supabase client init notice:", err);
+    }
+
+    const QUESTIONS = [
+      {
+        q: "What breaks a tie when two players get the exact same score?",
+        options: ["Alphabetical username", "Faster completion speed", "Account age", "Random draw"],
+        answer: 1
+      },
+      {
+        q: "Which positions trigger dethrone notifications when overtaken?",
+        options: ["All ranks #1–#1,000", "Only Top 10 (#1–#10)", "Only #50 and below", "No ranks"],
+        answer: 1
+      },
+      {
+        q: "What is the chemical symbol for Gold?",
+        options: ["Ag", "Au", "Gd", "Go"],
+        answer: 1
+      },
+      {
+        q: "Which planet in our solar system has the shortest day?",
+        options: ["Mars", "Venus", "Jupiter", "Neptune"],
+        answer: 2
+      },
+      {
+        q: "How does a player climb higher with the same score?",
+        options: ["Wait longer", "Finish faster with high accuracy", "Skip questions", "Refresh the page"],
+        answer: 1
+      }
     ];
 
-    const scenarios = {
-      outside: {
-        rank: 18,
-        score: "3 / 5",
-        time: "34.2s",
-        isTop10: false,
-        isDethroned: false,
-        badge: "POSITION #18 OF 500",
-        heading: "Well done, Alex! 👏",
-        standing: `You ranked <strong>#18</strong> out of <strong>${totalParticipants}</strong> participants.`,
-        encouragement: `You're not in the Top 10 yet, but you're close! Look at #1 on the leaderboard—they've been holding that spot for over <strong>10 hours</strong> unchallenged. Review what you missed below and <strong>try again</strong> to break into the <strong>Top 10</strong>!`,
-        cta: "Try Again to Enter the Top 10",
-        missed: [
-          {
-            question: "Q2. What is the chemical symbol for Gold?",
-            yourAnswer: "Ag",
-            correctAnswer: "Au"
-          },
-          {
-            question: "Q4. Which planet has the shortest day in our solar system?",
-            yourAnswer: "Mars",
-            correctAnswer: "Jupiter"
-          }
-        ]
-      },
-      top10: {
-        rank: 9,
-        score: "4 / 5",
-        time: "22.9s",
-        isTop10: true,
-        isDethroned: false,
-        badge: "🔥 TOP 10 FINISHER • #9 OF 500",
-        heading: "Well done, Alex! You made the Top 10! 🎉",
-        standing: `You just claimed <strong>#9</strong> out of <strong>${totalParticipants}</strong> participants.`,
-        encouragement: `Your live hold timer just started! Anyone playing right now can knock you out of #9 in seconds. Make sure notifications are on so you know if someone passes you—or <strong>try again</strong> now to climb toward <strong>#1</strong>.`,
-        cta: "Try Again to Climb Higher in Top 10",
-        missed: [
-          {
-            question: "Q4. Which planet has the shortest day in our solar system?",
-            yourAnswer: "Saturn",
-            correctAnswer: "Jupiter"
-          }
-        ]
-      },
-      first: {
-        rank: 1,
-        score: "5 / 5",
-        time: "17.9s",
-        isTop10: true,
-        isDethroned: false,
-        badge: "👑 #1 CHAMPION • OUT OF 500",
-        heading: "Incredible job, Alex! You dethroned #1! 🏆",
-        standing: `You just took the <strong>#1</strong> crown out of <strong>${totalParticipants}</strong> participants.`,
-        encouragement: `You ended Kwame A.'s 10-hour reign! Your champion clock is now ticking—keep notifications turned on so you get alerted the instant someone tries to steal #1!`,
-        cta: "Play Again to Beat Your Record",
-        missed: []
-      },
-      dethroned: {
-        rank: 11,
-        score: "4 / 5",
-        time: "22.9s",
-        isTop10: false,
-        isDethroned: true,
-        badge: "⚠️ DROPPED OUT OF TOP 10 • #11 OF 500",
-        heading: "You've Been Dethroned! ⚡",
-        standing: `<strong>Kofi M.</strong> just beat your speed and pushed you from <strong>#9</strong> to <strong>#11</strong> out of <strong>${totalParticipants}</strong>.`,
-        encouragement: `You held your Top 10 spot, and now someone just took it! Review the 1 question you missed below and <strong>try again right now</strong> to reclaim your spot on the leaderboard.`,
-        cta: "Reclaim My Top 10 Spot Now",
-        missed: [
-          {
-            question: "Q4. Which planet has the shortest day in our solar system?",
-            yourAnswer: "Saturn",
-            correctAnswer: "Jupiter"
-          }
-        ]
-      }
+    const now = Date.now();
+    let entries = [
+      { player_name: "Kwame A.", score: 5, total_questions: 5, completion_time_ms: 18400, claimed_at: new Date(now - 37455000).toISOString() },
+      { player_name: "Ama S.", score: 5, total_questions: 5, completion_time_ms: 21000, claimed_at: new Date(now - 15160000).toISOString() },
+      { player_name: "David K.", score: 5, total_questions: 5, completion_time_ms: 23700, claimed_at: new Date(now - 6485000).toISOString() },
+      { player_name: "Nana Y.", score: 5, total_questions: 5, completion_time_ms: 25100, claimed_at: new Date(now - 3139000).toISOString() },
+      { player_name: "Sarah M.", score: 5, total_questions: 5, completion_time_ms: 26800, claimed_at: new Date(now - 1784000).toISOString() },
+      { player_name: "Michael O.", score: 5, total_questions: 5, completion_time_ms: 28300, claimed_at: new Date(now - 850000).toISOString() },
+      { player_name: "Esi T.", score: 4, total_questions: 5, completion_time_ms: 19500, claimed_at: new Date(now - 392000).toISOString() },
+      { player_name: "Daniel B.", score: 4, total_questions: 5, completion_time_ms: 21200, claimed_at: new Date(now - 131000).toISOString() },
+      { player_name: "Grace L.", score: 4, total_questions: 5, completion_time_ms: 22900, claimed_at: new Date(now - 45000).toISOString() },
+      { player_name: "Kojo P.", score: 4, total_questions: 5, completion_time_ms: 24600, claimed_at: new Date(now - 8000).toISOString() }
+    ];
+
+    let totalCompetitorsDisplay = 1000;
+    let previousTop10Names = [];
+    let lastAlertAt = 0;
+    const ALERT_COOLDOWN_MS = 60000; // 1 min cooldown in demo
+
+    let currentUserState = {
+      name: "Alex",
+      rank: 18,
+      score: 3,
+      total: 5,
+      timeMs: 34200,
+      missed: [
+        { q: QUESTIONS[2].q, yours: QUESTIONS[2].options[0], correct: QUESTIONS[2].options[1] },
+        { q: QUESTIONS[3].q, yours: QUESTIONS[3].options[0], correct: QUESTIONS[3].options[2] }
+      ]
     };
 
-    // Request real Browser Notification Permission + update UI
-    async function requestDethroneNotifications() {
-      if ("Notification" in window) {
-        try {
-          const permission = await Notification.requestPermission();
-          if (permission === "granted") {
-            activateNotificationUI("Browser & Device Push Alerts Active");
-            new Notification("🔔 Dethrone Alerts Activated!", {
-              body: "We'll alert you the moment another participant takes your leaderboard spot."
-            });
-            return;
+    // Quiz session vars
+    let qIndex = 0;
+    let quizStartMs = 0;
+    let quizScore = 0;
+    let quizMissed = [];
+    let quizTimerInterval = null;
+
+    function getPlayerName() {
+      const val = document.getElementById("player-name-input").value.trim();
+      return val || "Alex";
+    }
+
+    function sortEntries(list) {
+      return [...list].sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.completion_time_ms - b.completion_time_ms;
+      });
+    }
+
+    function getTop10Names(sortedList) {
+      return sortedList.slice(0, 10).map(item => item.player_name);
+    }
+
+    // Strict Top-10-Only Dethrone Checker
+    function checkTop10Dethrones(oldTop10, newSortedList, actorName) {
+      const currentUser = getPlayerName();
+      const newTop10 = getTop10Names(newSortedList);
+
+      oldTop10.forEach((prevHolder, idx) => {
+        const oldRank = idx + 1;
+        if (prevHolder === actorName) return;
+
+        const newIndex = newTop10.indexOf(prevHolder);
+        const droppedOutOfTop10 = newIndex === -1;
+        const droppedLowerInTop10 = newIndex !== -1 && (newIndex + 1) > oldRank;
+
+        // Only trigger when a Top 10 (#1–#10) spot changes hands
+        if (droppedOutOfTop10 || droppedLowerInTop10) {
+          const newRankText = droppedOutOfTop10 ? "outside Top 10" : `#${newIndex + 1}`;
+          if (prevHolder === currentUser) {
+            const nowMs = Date.now();
+            if (nowMs - lastAlertAt >= ALERT_COOLDOWN_MS) {
+              lastAlertAt = nowMs;
+              triggerDethroneAlert(
+                `⚠️ You Lost Your #${oldRank} Top 10 Spot!`,
+                `${actorName} just overtook you—you moved from #${oldRank} to ${newRankText}. Play again to reclaim Top 10!`
+              );
+            }
           }
-        } catch (e) {
-          // Fallback for sandboxed iframe environments where native browser prompt is restricted
         }
-      }
-      // Fallback UI confirmation for preview environments
-      activateNotificationUI("Dethrone Alerts Enabled (Simulated)");
-      showPushToast(
-        "🔔 Alerts Turned On",
-        "You'll now receive an instant notification whenever another player overtakes your rank.",
-        "Got it"
-      );
+      });
+
+      previousTop10Names = newTop10;
     }
 
-    function activateNotificationUI(statusTitle) {
-      notificationsEnabled = true;
-      const bar = document.getElementById("notif-bar");
-      bar.classList.add("enabled");
-      document.getElementById("notif-icon").textContent = "✅";
-      document.getElementById("notif-title").textContent = statusTitle;
-      document.getElementById("notif-desc").textContent =
-        "Your push token is registered. If someone beats your score or speed, you'll be notified immediately.";
-      const btn = document.getElementById("enable-notif-btn");
-      btn.textContent = "Notifications On ✓";
-      btn.style.background = "#334155";
-      btn.style.color = "#6ee7b7";
-    }
+    function simulateTop10Dethrone() {
+      const targetUser = getPlayerName();
+      const oldSorted = sortEntries(entries);
+      previousTop10Names = getTop10Names(oldSorted);
 
-    // Trigger simulated push notification & update leaderboard state to show position traded
-    function simulateDethrone() {
-      const elapsedSec = Math.max(2, Math.floor((Date.now() - userClaimedTimestamp) / 1000));
-      const reignText = elapsedSec >= 60
-        ? `${Math.floor(elapsedSec / 60)}m ${elapsedSec % 60}s`
-        : `${elapsedSec}s`;
-
-      // Fire native OS/Browser notification if permitted
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("⚠️ Your Spot Was Just Taken!", {
-          body: `Kofi M. (4/5 in 21.4s) just pushed you out of the Top 10 after your ${reignText} reign. Tap to win it back!`
-        });
-      }
-
-      // Show realistic lock-screen/banner push toast inside the page
-      showPushToast(
-        "⚠️ Spot Taken! You dropped to #11",
-        `Kofi M. (4/5 in 21.4s) just overtook you after your ${reignText} hold. Play now to reclaim your Top 10 spot!`,
-        "Tap to Reclaim Spot →"
-      );
-
-      // Update leaderboard #9 slot to Kofi M. and switch user view to Dethroned (#11)
-      baseLeaderboard[8] = {
-        rank: 9,
-        name: "Kofi M.",
-        score: "4 / 5",
-        time: "21.4s",
-        claimedAt: Date.now()
+      // Ensure targetUser is in Top 10 first so they can be dethroned
+      const existingIdx = entries.findIndex(e => e.player_name === targetUser);
+      const userEntry = {
+        player_name: targetUser,
+        score: 4,
+        total_questions: 5,
+        completion_time_ms: 22900,
+        claimed_at: new Date().toISOString()
       };
-      renderResultState('dethroned');
+      if (existingIdx >= 0) entries[existingIdx] = userEntry;
+      else entries.splice(8, 0, userEntry);
+
+      // Challenger "Kofi M." beats targetUser's time at 4/5
+      const challengerName = "Kofi M.";
+      const challengerIdx = entries.findIndex(e => e.player_name === challengerName);
+      const challengerEntry = {
+        player_name: challengerName,
+        score: 4,
+        total_questions: 5,
+        completion_time_ms: 20500,
+        claimed_at: new Date().toISOString()
+      };
+      if (challengerIdx >= 0) entries[challengerIdx] = challengerEntry;
+      else entries.push(challengerEntry);
+
+      const newSorted = sortEntries(entries);
+      const newRank = newSorted.findIndex(e => e.player_name === targetUser) + 1;
+
+      currentUserState = {
+        name: targetUser,
+        rank: newRank || 11,
+        score: 4,
+        total: 5,
+        timeMs: 22900,
+        missed: [{ q: QUESTIONS[3].q, yours: QUESTIONS[3].options[0], correct: QUESTIONS[3].options[2] }]
+      };
+
+      triggerDethroneAlert(
+        `⚠️ Spot Taken! You Dropped to #${currentUserState.rank}`,
+        `${challengerName} (4/5 in 20.5s) just took your Top 10 spot! Tap to try again and reclaim Top 10.`
+      );
+      previousTop10Names = getTop10Names(newSorted);
+      renderResults();
     }
 
-    function showPushToast(title, body, ctaText) {
+    function triggerDethroneAlert(title, body) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification(title, { body });
+        } catch (_) {}
+      }
+
       const container = document.getElementById("push-toast-container");
       const toast = document.createElement("div");
       toast.className = "push-toast";
       toast.onclick = () => {
         toast.remove();
-        showView('quiz');
+        startQuiz();
       };
       toast.innerHTML = `
-        <div class="push-toast-header">
-          <span>🏆 QUIZ LEADERBOARD • NOW</span>
-          <span>✕</span>
-        </div>
         <div class="push-toast-title">${title}</div>
         <div class="push-toast-body">${body}</div>
-        <span class="push-toast-cta">${ctaText}</span>
+        <span class="push-toast-cta">Play Again to Reclaim →</span>
       `;
       container.appendChild(toast);
-
-      setTimeout(() => {
-        if (toast.parentNode) toast.remove();
-      }, 7500);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 7500);
     }
 
-    function formatHoldDuration(claimedAtMs) {
-      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - claimedAtMs) / 1000));
-      const hours = Math.floor(elapsedSeconds / 3600);
-      const minutes = Math.floor((elapsedSeconds % 3600) / 60);
-      const seconds = elapsedSeconds % 60;
-
-      if (hours >= 1) {
-        return { label: `👑 ${hours}h ${minutes}m`, tierClass: "hold-legend" };
-      } else if (minutes >= 1) {
-        return { label: `⏳ ${minutes}m ${seconds}s`, tierClass: "hold-steady" };
-      } else {
-        return { label: `⚡ ${seconds}s (New!)`, tierClass: "hold-fresh" };
+    async function requestAlerts() {
+      if ("Notification" in window) {
+        try {
+          const perm = await Notification.requestPermission();
+          if (perm === "granted") {
+            setAlertsEnabledUI("Browser Notifications Allowed");
+            new Notification("🔔 Top-10 Dethrone Alerts Active", {
+              body: "You'll be alerted when a Top 10 (#1–#10) spot changes hands."
+            });
+            return;
+          }
+        } catch (_) {}
       }
+      setAlertsEnabledUI("In-App Dethrone Alerts Active");
+      triggerDethroneAlert("🔔 Top-10 Alerts Enabled", "You'll get notified if someone overtakes a Top 10 spot.");
     }
 
-    function showView(viewName) {
-      document.querySelectorAll('.demo-btn').forEach(btn => btn.classList.remove('active'));
-      if (viewName === 'quiz') {
-        document.getElementById('quiz-view').classList.remove('hidden');
-        document.getElementById('results-view').classList.add('hidden');
-        document.querySelectorAll('.demo-btn')[0].classList.add('active');
-        updateLiveTimers();
-      } else {
-        document.getElementById('quiz-view').classList.add('hidden');
-        document.getElementById('results-view').classList.remove('hidden');
-      }
+    function setAlertsEnabledUI(label) {
+      document.getElementById("notif-bar").classList.add("enabled");
+      document.getElementById("notif-title").textContent = label;
+      document.getElementById("enable-notif-btn").textContent = "Alerts On ✓";
     }
 
-    function renderResultState(key) {
-      currentScenarioKey = key;
-      if (key === 'top10' || key === 'first') {
-        userClaimedTimestamp = Date.now();
-      }
-      showView('results');
+    // Supabase Sync + Realtime Listener
+    async function initSupabaseLeaderboard() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from("leaderboard_entries")
+          .select("*")
+          .order("score", { ascending: false })
+          .order("completion_time_ms", { ascending: true })
+          .limit(50);
 
-      const data = scenarios[key];
+        if (error) throw error;
 
-      const btnMap = { outside: 1, top10: 2, first: 3 };
-      if (btnMap[key] !== undefined) {
-        document.querySelectorAll('.demo-btn')[btnMap[key]].classList.add('active');
-      }
+        isSupabaseLive = true;
+        document.getElementById("db-status-pill").className = "status-pill";
+        document.getElementById("db-status-pill").textContent = "🟢 Supabase Live Connected";
 
-      // Update Hero Badge
-      const badge = document.getElementById('rank-badge');
-      badge.textContent = data.badge;
-      badge.className = data.isTop10
-        ? 'badge-rank top-ten'
-        : (data.isDethroned ? 'badge-rank dethroned' : 'badge-rank');
-
-      document.getElementById('congrats-heading').textContent = data.heading;
-      document.getElementById('standing-text').innerHTML = data.standing;
-      document.getElementById('stat-rank').textContent = `#${data.rank} / ${totalParticipants}`;
-      document.getElementById('stat-score').textContent = data.score;
-      document.getElementById('stat-time').textContent = data.time;
-
-      const encBox = document.getElementById('encouragement-copy');
-      encBox.innerHTML = data.encouragement;
-      encBox.className = data.isDethroned ? 'encouragement-box alert-mode' : 'encouragement-box';
-
-      const ctaBtn = document.getElementById('try-again-btn');
-      ctaBtn.textContent = data.cta;
-      ctaBtn.className = data.isDethroned ? 'cta-primary urgent' : 'cta-primary';
-
-      // Toggle User Reign Banner
-      const reignBanner = document.getElementById('user-reign-banner');
-      if (data.isTop10) {
-        reignBanner.classList.remove('hidden');
-      } else {
-        reignBanner.classList.add('hidden');
-      }
-
-      // Update Missed Questions
-      const missedContainer = document.getElementById('wrong-answers-container');
-      const missedCount = document.getElementById('missed-count');
-
-      if (data.missed.length === 0) {
-        missedCount.textContent = "0 Missed";
-        missedContainer.innerHTML = `<div class="perfect-score-msg">🌟 Perfect accuracy! You answered every single question correctly.</div>`;
-      } else {
-        missedCount.textContent = `${data.missed.length} Question${data.missed.length > 1 ? 's' : ''} Missed`;
-        missedContainer.innerHTML = data.missed.map(item => `
-          <div class="wrong-item">
-            <div class="wrong-q">${item.question}</div>
-            <div class="answer-comparison">
-              <span class="your-ans">✕ Your answer: ${item.yourAnswer}</span>
-              <span class="correct-ans">✓ Correct answer: ${item.correctAnswer}</span>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      updateLiveTimers();
-    }
-
-    function updateLiveTimers() {
-      const data = scenarios[currentScenarioKey];
-
-      if (data.isTop10) {
-        const elapsedSec = Math.max(0, Math.floor((Date.now() - userClaimedTimestamp) / 1000));
-        const mins = Math.floor(elapsedSec / 60);
-        const secs = elapsedSec % 60;
-        const formattedUserHold = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-        document.getElementById('user-reign-text').textContent =
-          `Holding #${data.rank} for ${formattedUserHold} — defend your spot!`;
-      }
-
-      const tbody = document.getElementById('leaderboard-body');
-      const rows = baseLeaderboard.map(entry => {
-        let displayEntry = { ...entry };
-        let isCurrentUser = false;
-
-        if (data.isTop10 && entry.rank === data.rank) {
-          displayEntry.name = "Alex (You)";
-          displayEntry.score = data.score;
-          displayEntry.time = data.time;
-          displayEntry.claimedAt = userClaimedTimestamp;
-          isCurrentUser = true;
+        if (data && data.length > 0) {
+          entries = data;
+          totalCompetitorsDisplay = Math.max(1000, data.length);
         }
 
-        const medal = displayEntry.rank === 1 ? "🥇 #1" :
-                      displayEntry.rank === 2 ? "🥈 #2" :
-                      displayEntry.rank === 3 ? "🥉 #3" : `#${displayEntry.rank}`;
+        previousTop10Names = getTop10Names(sortEntries(entries));
 
-        const holdInfo = formatHoldDuration(displayEntry.claimedAt);
-
-        return `
-          <tr class="${isCurrentUser ? 'highlight-user' : ''}">
-            <td><span class="rank-medal">${medal}</span></td>
-            <td>${displayEntry.name}</td>
-            <td>${displayEntry.score}</td>
-            <td>${displayEntry.time}</td>
-            <td><span class="hold-badge ${holdInfo.tierClass}">${holdInfo.label}</span></td>
-          </tr>
-        `;
-      }).join('');
-
-      tbody.innerHTML = rows;
-
-      const miniBody = document.getElementById('mini-leaderboard-body');
-      if (miniBody) {
-        miniBody.innerHTML = baseLeaderboard.slice(0, 3).map(entry => {
-          const medal = entry.rank === 1 ? "🥇 #1" : entry.rank === 2 ? "🥈 #2" : "🥉 #3";
-          const holdInfo = formatHoldDuration(entry.claimedAt);
-          return `
-            <tr>
-              <td><span class="rank-medal">${medal}</span></td>
-              <td>${entry.name}</td>
-              <td>${entry.score}</td>
-              <td>${entry.time}</td>
-              <td><span class="hold-badge ${holdInfo.tierClass}">${holdInfo.label}</span></td>
-            </tr>
-          `;
-        }).join('');
+        supabaseClient
+          .channel("leaderboard-top10-watch")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "leaderboard_entries" },
+            async () => {
+              const { data: fresh } = await supabaseClient
+                .from("leaderboard_entries")
+                .select("*")
+                .order("score", { ascending: false })
+                .order("completion_time_ms", { ascending: true })
+                .limit(50);
+              if (fresh && fresh.length > 0) {
+                entries = fresh;
+                totalCompetitorsDisplay = Math.max(1000, fresh.length);
+                checkTop10Dethrones(previousTop10Names, sortEntries(entries), getPlayerName());
+                renderLeaderboards();
+              }
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        isSupabaseLive = false;
+        document.getElementById("db-status-pill").className = "status-pill fallback";
+        document.getElementById("db-status-pill").textContent = "🟡 Demo Mode (Run SQL Setup)";
+        document.getElementById("db-status-detail").textContent = "Click 'SQL Setup' to create leaderboard_entries table";
       }
     }
 
-    setInterval(updateLiveTimers, 1000);
-    renderResultState('outside');
+    async function saveScoreToSupabase(playerName, score, total, timeMs) {
+      const sortedBefore = sortEntries(entries);
+      previousTop10Names = getTop10Names(sortedBefore);
+
+      const newRecord = {
+        player_name: playerName,
+        score,
+        total_questions: total,
+        completion_time_ms: timeMs,
+        claimed_at: new Date().toISOString()
+      };
+
+      const idx = entries.findIndex(e => e.player_name === playerName);
+      if (idx >= 0) {
+        const prev = entries[idx];
+        const better = score > prev.score || (score === prev.score && timeMs < prev.completion_time_ms);
+        if (better) entries[idx] = newRecord;
+      } else {
+        entries.push(newRecord);
+      }
+
+      const sortedAfter = sortEntries(entries);
+      checkTop10Dethrones(previousTop10Names, sortedAfter, playerName);
+
+      if (isSupabaseLive && supabaseClient) {
+        await supabaseClient
+          .from("leaderboard_entries")
+          .upsert(newRecord, { onConflict: "player_name" });
+      }
+
+      const rankIdx = sortedAfter.findIndex(e => e.player_name === playerName);
+      return rankIdx >= 0 ? rankIdx + 1 : 18;
+    }
+
+    // Quiz Gameplay
+    function startQuiz() {
+      showView("quiz");
+      qIndex = 0;
+      quizScore = 0;
+      quizMissed = [];
+      quizStartMs = performance.now();
+
+      clearInterval(quizTimerInterval);
+      quizTimerInterval = setInterval(() => {
+        const sec = ((performance.now() - quizStartMs) / 1000).toFixed(1);
+        document.getElementById("live-quiz-timer").textContent = `⏱ ${sec}s`;
+      }, 100);
+
+      renderQuestion();
+      renderLeaderboards();
+    }
+
+    function renderQuestion() {
+      const item = QUESTIONS[qIndex];
+      document.getElementById("q-progress").textContent = `Question ${qIndex + 1} of ${QUESTIONS.length}`;
+      document.getElementById("q-text").textContent = item.q;
+      const box = document.getElementById("q-options");
+      box.innerHTML = item.options.map((opt, i) =>
+        `<button class="option-btn" onclick="answerQuestion(${i})">${opt}</button>`
+      ).join("");
+    }
+
+    async function answerQuestion(selectedIdx) {
+      const item = QUESTIONS[qIndex];
+      if (selectedIdx === item.answer) {
+        quizScore += 1;
+      } else {
+        quizMissed.push({
+          q: item.q,
+          yours: item.options[selectedIdx],
+          correct: item.options[item.answer]
+        });
+      }
+
+      qIndex += 1;
+      if (qIndex < QUESTIONS.length) {
+        renderQuestion();
+      } else {
+        clearInterval(quizTimerInterval);
+        const elapsedMs = Math.max(1200, Math.round(performance.now() - quizStartMs));
+        const name = getPlayerName();
+        const rank = await saveScoreToSupabase(name, quizScore, QUESTIONS.length, elapsedMs);
+
+        currentUserState = {
+          name,
+          rank,
+          score: quizScore,
+          total: QUESTIONS.length,
+          timeMs: elapsedMs,
+          missed: quizMissed
+        };
+
+        renderResults();
+      }
+    }
+
+    function formatHoldDuration(isoTimestamp) {
+      const claimedMs = new Date(isoTimestamp).getTime();
+      const sec = Math.max(0, Math.floor((Date.now() - claimedMs) / 1000));
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+
+      if (h >= 1) return { label: `👑 ${h}h ${m}m`, cls: "hold-legend" };
+      if (m >= 1) return { label: `⏳ ${m}m ${s}s`, cls: "hold-steady" };
+      return { label: `⚡ ${s}s (New!)`, cls: "hold-fresh" };
+    }
+
+    function renderResults() {
+      showView("results");
+      const u = currentUserState;
+      const inTop10 = u.rank <= 10;
+      const totalStr = totalCompetitorsDisplay.toLocaleString();
+      const speedSec = (u.timeMs / 1000).toFixed(1) + "s";
+
+      const badge = document.getElementById("rank-badge");
+      badge.textContent = inTop10
+        ? `🔥 TOP 10 FINISHER • #${u.rank} OF ${totalStr}`
+        : `POSITION #${u.rank} OF ${totalStr}`;
+      badge.className = inTop10 ? "badge-rank top-ten" : "badge-rank";
+
+      document.getElementById("congrats-heading").textContent = inTop10
+        ? `Well done, ${u.name}! You're in the Top 10! 🎉`
+        : `Well done, ${u.name}! 👏`;
+
+      document.getElementById("standing-text").innerHTML =
+        `You ranked <strong>#${u.rank}</strong> out of <strong>${totalStr}</strong> competitors.`;
+
+      document.getElementById("stat-rank").textContent = `#${u.rank} / ${totalStr}`;
+      document.getElementById("stat-score").textContent = `${u.score} / ${u.total}`;
+      document.getElementById("stat-time").textContent = speedSec;
+
+      const reignBanner = document.getElementById("user-reign-banner");
+      if (inTop10) {
+        reignBanner.classList.remove("hidden");
+        reignBanner.querySelector("span:last-child").textContent = `Holding Top 10 (#${u.rank}) — defend your spot!`;
+      } else {
+        reignBanner.classList.add("hidden");
+      }
+
+      if (u.rank === 1) {
+        document.getElementById("encouragement-copy").innerHTML =
+          `You're <strong>#1</strong>! Want to make your reign even harder to break? <strong>Try again</strong> to set an even faster time.`;
+        document.getElementById("try-again-btn").textContent = "Play Again to Beat Your Record";
+      } else if (inTop10) {
+        document.getElementById("encouragement-copy").innerHTML =
+          `You're holding <strong>#${u.rank}</strong> in the Top 10! <strong>Try again</strong> to improve your speed/accuracy and climb toward <strong>#1</strong>.`;
+        document.getElementById("try-again-btn").textContent = "Try Again to Climb Higher";
+      } else {
+        document.getElementById("encouragement-copy").innerHTML =
+          `You're outside the Top 10 right now. Review what you missed below and <strong>try again</strong>—a faster, higher score gives you a chance to enter the <strong>Top 10</strong>!`;
+        document.getElementById("try-again-btn").textContent = "Try Again to Reach Top 10";
+      }
+
+      const missedBox = document.getElementById("wrong-answers-container");
+      document.getElementById("missed-count").textContent = `${u.missed.length} Missed`;
+      if (u.missed.length === 0) {
+        missedBox.innerHTML = `<div style="color:#6ee7b7; font-size:0.92rem;">🌟 Every question answered correctly!</div>`;
+      } else {
+        missedBox.innerHTML = u.missed.map(m => `
+          <div class="wrong-item">
+            <div class="wrong-q">${m.q}</div>
+            <span class="your-ans">✕ Your answer: ${m.yours}</span>
+            <span class="correct-ans">✓ Correct answer: ${m.correct}</span>
+          </div>
+        `).join("");
+      }
+
+      renderLeaderboards();
+    }
+
+    function renderLeaderboards() {
+      const sortedTop10 = sortEntries(entries).slice(0, 10);
+      const currentUser = getPlayerName();
+
+      document.getElementById("quiz-total-players").textContent =
+        `${totalCompetitorsDisplay.toLocaleString()} Competitors`;
+
+      document.getElementById("leaderboard-body").innerHTML = sortedTop10.map((row, idx) => {
+        const rank = idx + 1;
+        const medal = rank === 1 ? "🥇 #1" : rank === 2 ? "🥈 #2" : rank === 3 ? "🥉 #3" : `#${rank}`;
+        const hold = formatHoldDuration(row.claimed_at);
+        const isMe = row.player_name === currentUser;
+        return `
+          <tr class="${isMe ? "highlight-user" : ""}">
+            <td>${medal}</td>
+            <td>${row.player_name}${isMe ? " (You)" : ""}</td>
+            <td>${row.score} / ${row.total_questions}</td>
+            <td>${(row.completion_time_ms / 1000).toFixed(1)}s</td>
+            <td><span class="hold-badge ${hold.cls}">${hold.label}</span></td>
+          </tr>
+        `;
+      }).join("");
+
+      document.getElementById("mini-leaderboard-body").innerHTML = sortedTop10.slice(0, 3).map((row, idx) => {
+        const rank = idx + 1;
+        const medal = rank === 1 ? "🥇 #1" : rank === 2 ? "🥈 #2" : "🥉 #3";
+        const hold = formatHoldDuration(row.claimed_at);
+        return `
+          <tr>
+            <td>${medal}</td>
+            <td>${row.player_name}</td>
+            <td>${row.score} / ${row.total_questions}</td>
+            <td>${(row.completion_time_ms / 1000).toFixed(1)}s</td>
+            <td><span class="hold-badge ${hold.cls}">${hold.label}</span></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function showView(name) {
+      document.getElementById("quiz-view").classList.toggle("hidden", name !== "quiz");
+      document.getElementById("results-view").classList.toggle("hidden", name !== "results");
+      renderLeaderboards();
+    }
+
+    function toggleSqlHelper() {
+      document.getElementById("sql-helper-card").classList.toggle("hidden");
+    }
+
+    function copySql() {
+      const text = document.getElementById("sql-code").textContent;
+      navigator.clipboard?.writeText(text);
+    }
+
+    setInterval(renderLeaderboards, 1000);
+    initSupabaseLeaderboard();
+    renderResults();
   </script>
 </body>
 </html>
