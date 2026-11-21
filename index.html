@@ -3391,21 +3391,26 @@ D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
     }
 
     function parseQuestionsFromPlainText(rawText, bankNum) {
-      const lines = rawText
+      const lines = (rawText || "")
         .split(/\r?\n/)
-        .map(l => l.trim())
+        .map(l => l.replace(/\u00A0/g, " ").trim())
         .filter(l => l.length > 0);
 
       const parsed = [];
       let currentQ = null;
 
-      const qStartRegex = /^(?:Q\s*\d+[\).\s:-]*|\d+[\).\s:-]+)(.+)/i;
-      const optRegex = /^(?:[A-Da-d1-4][\).\s:-]+)(.+)/;
+      const qStartRegex = /^(?:Q\s*\d+[\.\)\s:-]*|\d+[\.\)\s:-]+)\s*(.+)/i;
+      const optRegex = /^(?:[A-Da-d][\.\)\s:-]+)\s*(.+)/;
 
       for (const line of lines) {
         const qMatch = line.match(qStartRegex);
-        if (qMatch && (!currentQ || currentQ.options.length >= 2)) {
-          if (currentQ && currentQ.options.length >= 2) {
+        const oMatch = line.match(optRegex);
+
+        // Start a new question when encountering a numbered/Q-prefixed line
+        // after having collected at least 2 options for the current question
+        // (handles continuous numbering 1..50 and restarted numbering like 1..21 then 1..15).
+        if (qMatch && (!currentQ || currentQ.rawOptions.length >= 2)) {
+          if (currentQ && currentQ.rawOptions.length >= 2) {
             parsed.push(finalizeParsedQuestion(currentQ, bankNum));
           }
           currentQ = {
@@ -3415,25 +3420,40 @@ D. Hazrat Mirza Bashir-ud-Din Mahmud Ahmad (ra)</pre>
           continue;
         }
 
-        const oMatch = line.match(optRegex);
         if (currentQ && oMatch) {
           let optText = oMatch[1].trim();
           let isCorrect = false;
-          if (optText.endsWith("*") || optText.includes(" *")) {
+
+          if (/\*\s*$/.test(optText)) {
             isCorrect = true;
-            optText = optText.replace(/\*+$/g, "").trim();
+            optText = optText.replace(/\s*\*+\s*$/, "").trim();
           }
-          if (/^\(correct\)|^\[correct\]/i.test(optText)) {
+          if (/^\(correct\)\s*|^\[correct\]\s*/i.test(optText)) {
             isCorrect = true;
-            optText = optText.replace(/^\(correct\)|^\[correct\]/i, "").trim();
+            optText = optText.replace(/^\(correct\)\s*|^\[correct\]\s*/i, "").trim();
           }
+          if (/\s*\(correct\)\s*$|\s*\[correct\]\s*$/i.test(optText)) {
+            isCorrect = true;
+            optText = optText.replace(/\s*\(correct\)\s*$|\s*\[correct\]\s*$/i, "").trim();
+          }
+
           currentQ.rawOptions.push({ text: optText, isCorrect });
         } else if (currentQ && currentQ.rawOptions.length === 0) {
           currentQ.q += " " + line;
+        } else if (currentQ && currentQ.rawOptions.length > 0) {
+          const lastOpt = currentQ.rawOptions[currentQ.rawOptions.length - 1];
+          let contLine = line;
+          if (/\*\s*$/.test(contLine)) {
+            lastOpt.isCorrect = true;
+            contLine = contLine.replace(/\s*\*+\s*$/, "").trim();
+          }
+          if (contLine) {
+            lastOpt.text += " " + contLine;
+          }
         }
       }
 
-      if (currentQ && currentQ.options === undefined && currentQ.rawOptions.length >= 2) {
+      if (currentQ && currentQ.rawOptions.length >= 2) {
         parsed.push(finalizeParsedQuestion(currentQ, bankNum));
       }
 
